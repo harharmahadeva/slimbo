@@ -5,6 +5,13 @@ Format: [v{MAJOR}.{MINOR}.{PATCH}] — YYYY-MM-DD
 
 ---
 
+## [v1.11.0] — 2026-06-22
+### Changed
+- **Sound effects off by default** — `_muted` now defaults to `true` (was `false`); stored as `slimbo_mute=0` only when explicitly turned on
+- **🔇/🔊 toggle button** added to home screen header — Devvrat can tap to turn sound on or off; preference persists in localStorage across sessions
+
+---
+
 ## [v1.10.0] — 2026-06-22
 ### Fixed
 - **Raket Race buttons** — options with string values (spelling/dictee words) were passed via `JSON.stringify` inside `onclick`, causing double-quote collision in HTML attributes and breaking all button taps. Switched to `data-idx` attribute + `answerRaket(this)` — buttons now work for all option types (numbers and strings)
