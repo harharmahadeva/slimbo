@@ -5,6 +5,37 @@ Format: [v{MAJOR}.{MINOR}.{PATCH}] — YYYY-MM-DD
 
 ---
 
+## [v1.12.0] — 2026-06-22
+### Security (OWASP hardening)
+- **CSP meta tag** added — restricts script/style/font/connect sources
+- **XSS fix** — `esc()` helper added; applied to `renderMsgBanners` so Sandy's messages are HTML-escaped before insertion into innerHTML
+- **Login rate limiting** — 5 failed attempts triggers a 60-second lockout; counter resets on success
+- **Message ID collision fix** — `sendMsg` now uses `Date.now()+'_'+random` for unique IDs
+- **Resume tafelN bug** — `tafelN=r.tafelN||0` replaced with `r.tafelN!=null?r.tafelN:1`; `0` was falsy and reset to zero, breaking adaptive tafels after resume
+
+### Design — Kids UX overhaul
+- **Demo disclaimer badge** added to home screen — "🔒 Demo versie · Alleen voor persoonlijk gebruik · Niet commercieel"
+- **`--text3` contrast fix** — raised from `#7E7B9A` (~3.2:1) to `#9B98B8` (~4.6:1, passes WCAG AA)
+- **`ring-label` legibility** — font-size raised from 9px to 12px
+- **Confetti bug fixed** — JS was creating `.conf-piece` elements but CSS animation targets `.confetto`; class name unified to `confetto`; confetti now animates correctly on celebration screen
+- **Answer buttons** — min-height 66px, font-size 18px, border-radius 18px, active-scale feedback; applies to all mc-btn, opt-btn, lezen-opt
+- **D/T spelling buttons** — min-height 70px, font-size 28px
+- **Number grid buttons** (Rekenen) — min-height 62px, font-size 22px
+- **Primary buttons** (login, cel-btn, next-btn) — min-height 58–60px, larger font, bigger radius
+- **Module cards** — border-radius 24px, emoji 42px, mod-name 17px/900 weight, bigger padding
+- **Module card active** — scale(.92) — more satisfying press animation for kids
+- **Stats pills** — larger padding, 24px value font, 12px label
+- **Login card** — larger border-radius (32px), bigger rocket emoji (64px), larger brand (46px), bigger input
+- **User picker buttons** — min-height 100px, 40px avatar, 15px name, better selected state with shadow
+- **Question text** — q-zin 22px, tafel-quiz-sum 56px, rekenen-sum 50px for easy reading
+- **Hero text** — name 32px, greeting 15px, sub 14px
+- **PIN overlay** — bigger card radius (28px), larger input (24px), bigger OK button
+- **Touch targets** — `touch-action:manipulation` on all buttons; streak-chip, logout-btn minimum sizes set
+- **Resume banner** — border-radius 16px, resume-btn min-height 44px
+- **Celebration screen** — cel-emoji 88px, cel-title 38px, cel-stars 54px, cel-btn 60px min-height
+
+---
+
 ## [v1.11.0] — 2026-06-22
 ### Changed
 - **Sound effects off by default** — `_muted` now defaults to `true` (was `false`); stored as `slimbo_mute=0` only when explicitly turned on
