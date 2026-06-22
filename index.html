@@ -475,6 +475,18 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 @keyframes stars-fly{0%{opacity:0;transform:translateY(20px)}50%{opacity:1}100%{opacity:0;transform:translateY(-40px)}}
 @keyframes confettiFall{0%{opacity:1;transform:translateY(-10px) rotate(0)}100%{opacity:0;transform:translateY(80vh) rotate(540deg)}}
 
+/* ── RESUME BANNER ── */
+.resume-card{margin:10px 16px;background:linear-gradient(135deg,rgba(91,196,245,.12),rgba(181,112,247,.1));
+  border:1px solid rgba(91,196,245,.35);border-radius:14px;padding:12px 16px;
+  display:flex;align-items:center;gap:10px;}
+.resume-info{flex:1;}
+.resume-mod{font-size:15px;font-weight:700;color:var(--blue);}
+.resume-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+.resume-btn{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border:none;
+  border-radius:10px;padding:9px 16px;font-size:13px;font-weight:800;cursor:pointer;
+  font-family:"Outfit",sans-serif;white-space:nowrap;}
+.resume-dismiss{background:transparent;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0 4px;line-height:1;}
+
 /* ── USER PICKER ── */
 .user-picker{display:flex;gap:10px;justify-content:center;margin:8px 0 16px;}
 .user-pick-btn{flex:1;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.12);
@@ -651,6 +663,7 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
       <div class="hero-goal" id="heroGoal">Doel: 120 min 💪</div>
     </div>
   </div>
+  <div id="resumeBanner"></div>
   <div id="msgBanners"></div>
   <div class="stats-row">
     <div class="stat-pill">
@@ -1227,6 +1240,7 @@ function showHome(){
 
   // messages from Sandy
   renderMsgBanners();
+  renderResumeBanner();
   checkHourLock();
 }
 
@@ -1242,6 +1256,27 @@ function renderMsgBanners(){
       <button class="msg-dismiss" onclick="dismissMsg(${m.id})">×</button>
     </div>`).join('');
 }
+const MOD_LABELS={woorden:'Woordenschat 📚',spelling:'Spelling d/t ✏️',delen:'Delen ➗',lezen:'Lezen 📖',tafels:'Tafels ✖️',rekenen:'Rekenen 🔢'};
+
+function renderResumeBanner(){
+  const wrap=document.getElementById('resumeBanner');
+  if(!wrap) return;
+  const r=getResume();
+  if(!r){ wrap.innerHTML=''; return; }
+  const label=MOD_LABELS[r.moduleId]||r.moduleId;
+  const qNum=r.moduleIdx+1;
+  const qTotal=r.moduleQuestions.length;
+  const savedTime=new Date(r.savedAt).toLocaleTimeString('nl',{hour:'2-digit',minute:'2-digit'});
+  wrap.innerHTML=`<div class="resume-card">
+    <div class="resume-info">
+      <div class="resume-mod">${label}</div>
+      <div class="resume-sub">Vraag ${qNum}/${qTotal} · gestopt om ${savedTime}</div>
+    </div>
+    <button class="resume-btn" onclick="resumeModule()">▶ Doorgaan</button>
+    <button class="resume-dismiss" onclick="clearResume();renderResumeBanner()">×</button>
+  </div>`;
+}
+
 function dismissMsg(id){
   const all = getMsgs();
   const m   = all.find(x=>x.id===id);
@@ -1380,8 +1415,42 @@ let moduleId='', moduleQuestions=[], moduleIdx=0, moduleCorrect=0;
 let exStep=0, exSteps=[];
 let tafelN=0;
 
+// ── RESUME STATE ──────────────────────────────────────────
+function resumeKey(){ return 'slimbo_resume_'+(currentUser?.name||''); }
+function saveResume(){
+  if(!currentUser || currentUser.role!=='student') return;
+  localStorage.setItem(resumeKey(), JSON.stringify({
+    moduleId, moduleIdx, moduleCorrect, moduleQuestions, tafelN,
+    savedAt: Date.now()
+  }));
+}
+function clearResume(){
+  if(currentUser) localStorage.removeItem(resumeKey());
+}
+function getResume(){
+  try{
+    const raw=localStorage.getItem(resumeKey());
+    if(!raw) return null;
+    const r=JSON.parse(raw);
+    // only show if saved today
+    if(new Date(r.savedAt).toDateString()!==new Date().toDateString()) return null;
+    if(!r.moduleQuestions?.length) return null;
+    return r;
+  }catch(e){ return null; }
+}
+function resumeModule(){
+  const r=getResume();
+  if(!r) return;
+  moduleId=r.moduleId; moduleIdx=r.moduleIdx; moduleCorrect=r.moduleCorrect;
+  moduleQuestions=r.moduleQuestions; tafelN=r.tafelN||0;
+  exStep=0; exSteps=[];
+  sfxModStart();
+  renderQuestion();
+}
+
 // ── START MODULE ──────────────────────────────────────────
 function startModule(id){
+  clearResume();
   moduleId=id; moduleIdx=0; moduleCorrect=0; exStep=0; exSteps=[];
   sfxModStart();
   if(id==='tafels'){ renderTafelPicker(); return; }
@@ -1451,6 +1520,7 @@ function getRekenExSteps(level){
 // ── RENDER QUESTION ───────────────────────────────────────
 function renderQuestion(){
   if(moduleIdx>=moduleQuestions.length){ showCelebration(); return; }
+  saveResume();
   const q=moduleQuestions[moduleIdx];
   const ex=document.getElementById('exerciseScreen');
   ex.innerHTML='';
@@ -1649,6 +1719,7 @@ function selectTafel(n){
 
 // ── CELEBRATION ───────────────────────────────────────────
 function showCelebration(){
+  clearResume();
   const total=moduleQuestions.filter(q=>!['delen_ex','lezen_story','rekenen_ex','tafels_learn'].includes(q.type)).length;
   const pct=total>0?Math.round(moduleCorrect/total*100):100;
   const stars=pct>=90?3:pct>=70?2:1;
