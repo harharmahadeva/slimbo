@@ -1,0 +1,20 @@
+{
+  "name": "Slimbo — Leren is superleuk!",
+  "short_name": "Slimbo",
+  "description": "Leer spelling, rekenen en begrijpend lezen — voor groep 4/5",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0D0D1A",
+  "theme_color": "#0D0D1A",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "games"],
+  "lang": "nl"
+}
