@@ -5,6 +5,18 @@ Format: [v{MAJOR}.{MINOR}.{PATCH}] — YYYY-MM-DD
 
 ---
 
+## [v1.5.0] — 2026-06-22
+### Added
+- **Mid-session resume** — Devvrat's exact position is saved to localStorage (`slimbo_resume_devvrat`) after every question render
+- Resume card appears on the home screen showing which module was interrupted, which question number, and the time he stopped (e.g. "Woordenschat 📚 · Vraag 3/6 · gestopt om 14:32")
+- "▶ Doorgaan" button restores the full shuffled question set, question index, and correct count — no reshuffle, no restart
+- Dismiss (×) button on resume card to clear and start fresh
+- Resume state auto-expires at midnight (only shown if saved today)
+- `clearResume()` called on fresh `startModule()` and on `showCelebration()` so completed sessions don't linger
+- localStorage key: `slimbo_resume_[username]`
+
+---
+
 ## [v1.4.0] — 2026-06-22
 ### Changed
 - Exercise screen: content now vertically centered on screen instead of stacking at the top
