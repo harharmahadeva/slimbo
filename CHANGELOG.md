@@ -5,6 +5,28 @@ Format: [v{MAJOR}.{MINOR}.{PATCH}] — YYYY-MM-DD
 
 ---
 
+## [v1.9.0] — 2026-06-22
+### Added — Raket Race bonus mode
+- New 🚀 **Raket Race** card on home screen (8th module)
+- 10 random MC questions pulled from all modules: 3 spelling, 3 rekenen, 2 tafels, 2 dictee spelling-choice
+- Timer counts up from 0 — beat your personal best
+- Personal best saved to `progress.raketBest`; shown on home card
+- Custom result screen: time, score, stars, new-record flash
+- "Nog een race" retry button
+
+### Added — Dictee module (Groep 4 syllabus)
+- New 📝 **Dictee** card (7th module), 10 random words per session
+- 35 words across 7 spelling categories: ei/ij · au/ou · ui · ng/nk · sch · open syllable (aa/oo/ee) · samenstellingen
+- Format: full sentence with word blanked, emoji visual, hint, letter-count, category label
+- Student types the word; exact match checked (case-insensitive)
+- Wrong answer shows what they typed vs correct spelling
+- Star badges and today-done tracking same as other modules
+
+### Fixed — Tafels rotation when ≤3 facts remain
+- Previously: only 2–3 hard facts cycled back-to-back → frustrating
+- Now: mastered facts are mixed in 1:1 as warm-up review rounds, labelled "✓ herhaling — al gememoreerd!"
+- Hard facts still appear every other question; session still ends only when all 10 mastered
+
 ## [v1.6.0] — 2026-06-22
 ### Added — Tafels adaptive memorization engine
 - Session never ends until all 10 facts (×1 through ×10) are individually mastered
