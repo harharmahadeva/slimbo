@@ -167,7 +167,7 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 .mod-badge{position:absolute;top:10px;right:10px;font-size:18px;}
 
 /* ── EXERCISE ── */
-#exerciseScreen{min-height:100vh;padding-bottom:24px;}
+#exerciseScreen{min-height:100vh;padding-bottom:24px;display:flex;flex-direction:column;}
 .ex-header{display:flex;align-items:center;gap:10px;
   padding:max(env(safe-area-inset-top),12px) 16px 12px;
   background:rgba(18,17,26,.96);backdrop-filter:blur(10px);
@@ -181,7 +181,7 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 .ex-prog-bar{height:5px;background:var(--border);border-radius:99px;margin:0 16px;}
 .ex-prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--orange),var(--pink));transition:width .4s ease;}
 .ex-prog-labels{display:flex;justify-content:space-between;padding:5px 16px 0;font-size:12px;color:var(--text3);}
-.ex-body{padding:14px 16px;}
+.ex-body{padding:14px 16px;flex:1;display:flex;flex-direction:column;justify-content:center;}
 .ex-card{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px;}
 
 /* answer buttons */
