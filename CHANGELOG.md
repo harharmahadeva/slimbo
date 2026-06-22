@@ -5,6 +5,15 @@ Format: [v{MAJOR}.{MINOR}.{PATCH}] — YYYY-MM-DD
 
 ---
 
+## [v1.10.0] — 2026-06-22
+### Fixed
+- **Raket Race buttons** — options with string values (spelling/dictee words) were passed via `JSON.stringify` inside `onclick`, causing double-quote collision in HTML attributes and breaking all button taps. Switched to `data-idx` attribute + `answerRaket(this)` — buttons now work for all option types (numbers and strings)
+- **Dictee — now a real dictation exercise:**
+  - Word is no longer shown on screen — student must listen and type from memory
+  - Word is spoken automatically on question load via Web Speech API (`SpeechSynthesis`, `nl-NL`, rate 0.8)
+  - 🔊 "Luister naar het woord" button lets student replay as many times as needed
+  - After answering, the correct word is spoken again and the full sentence is shown in the feedback (so student sees context of what the word means)
+
 ## [v1.9.0] — 2026-06-22
 ### Added — Raket Race bonus mode
 - New 🚀 **Raket Race** card on home screen (8th module)
