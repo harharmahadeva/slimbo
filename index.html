@@ -1691,27 +1691,33 @@ function renderQuestion(){
     <div class="mc-opts">${opts.map(o=>`<button class="mc-btn" onclick="answerTafels(${o},${q.ans})">${o}</button>`).join('')}</div>
     <div id="feedback" class="feedback hidden"></div>`;
   } else if(q.type==='dictee'){
-    const blanked=q.zin.replace('_____',`<span style="letter-spacing:4px;color:var(--yellow);font-weight:900">${'_'.repeat(q.woord.length)}</span>`);
     body.innerHTML=`
-      <div style="font-size:56px;text-align:center;display:block;margin:0 0 6px">${q.emoji}</div>
-      <div style="font-size:13px;text-align:center;color:var(--text3);margin-bottom:10px">💡 ${q.hint}</div>
-      <div style="font-size:19px;font-weight:700;text-align:center;line-height:1.8;padding:12px 8px;
-        background:var(--surface);border-radius:14px;border-left:4px solid var(--yellow);margin-bottom:14px">${blanked}</div>
-      <div style="font-size:12px;color:var(--text3);text-align:center;margin-bottom:6px">${q.woord.length} letters · categorie: <strong style="color:var(--purple)">${q.cat}</strong></div>
-      <input id="dicteeInput" class="word-input" type="text" placeholder="Typ het woord..."
+      <div style="font-size:72px;text-align:center;margin:0 0 6px">${q.emoji}</div>
+      <div style="font-size:13px;text-align:center;color:var(--text3);margin-bottom:16px">💡 ${q.hint}</div>
+      <button id="speakBtn" class="btn-primary" onclick="speakDicteeWord()"
+        style="background:linear-gradient(135deg,var(--blue),var(--purple));margin-bottom:6px">
+        🔊 Luister naar het woord
+      </button>
+      <div style="font-size:12px;color:var(--text3);text-align:center;margin-bottom:14px">
+        Luister goed, dan schrijf je het woord hieronder. Je mag nog een keer luisteren!
+      </div>
+      <div style="font-size:12px;color:var(--text3);text-align:center;margin-bottom:8px">
+        ${q.woord.length} letters &nbsp;·&nbsp; categorie: <strong style="color:var(--purple)">${q.cat}</strong>
+      </div>
+      <input id="dicteeInput" class="word-input" type="text" placeholder="Schrijf het woord..."
         autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-      <button class="btn-primary" onclick="answerDictee()">Controleren ✓</button>
+      <button class="btn-primary" onclick="answerDictee()" style="margin-top:8px">Controleren ✓</button>
       <div id="feedback" class="feedback hidden"></div>`;
-    setTimeout(()=>{ const i=document.getElementById('dicteeInput'); if(i) i.focus(); },200);
+    setTimeout(()=>speakDicteeWord(), 600);
+    setTimeout(()=>{ const i=document.getElementById('dicteeInput'); if(i) i.focus(); },1800);
     document.getElementById('dicteeInput').addEventListener('keyup',e=>{ if(e.key==='Enter') answerDictee(); });
   } else if(q.type==='raket'){
-    // Raket Race MC question
+    // use data-idx to avoid quote-escaping issues with string option values
     body.innerHTML=`
       <div class="raket-timer" id="raketTimer">0:00</div>
       <div class="raket-timer-lbl">⏱ Raket Race — ${moduleIdx+1}/10</div>
-      ${q.reviewBadge?`<div style="text-align:center"><span class="raket-review-badge">herhaling</span></div>`:''}
-      <div style="font-size:22px;font-weight:700;text-align:center;margin:10px 0 14px;line-height:1.6">${q.vraag}</div>
-      <div class="mc-opts">${q.opts.map(o=>`<button class="mc-btn" onclick="answerRaket(${JSON.stringify(o)},${JSON.stringify(q.correct)})">${o}</button>`).join('')}</div>
+      <div style="font-size:20px;font-weight:700;text-align:center;margin:10px 0 14px;line-height:1.6;white-space:pre-wrap">${q.vraag}</div>
+      <div class="mc-opts">${q.opts.map((o,i)=>`<button class="mc-btn" data-idx="${i}" onclick="answerRaket(this)">${o}</button>`).join('')}</div>
       <div id="feedback" class="feedback hidden"></div>`;
     startRaketTimer();
   }
@@ -1809,15 +1815,31 @@ function answerRekenen(){
   setTimeout(()=>{ moduleIdx++; renderQuestion(); },1600);
 }
 
+function speakDicteeWord(){
+  const q=moduleQuestions[moduleIdx];
+  if(!q || q.type!=='dictee') return;
+  speechSynthesis.cancel();
+  const utt=new SpeechSynthesisUtterance(q.woord);
+  utt.lang='nl-NL'; utt.rate=0.8; utt.pitch=1;
+  speechSynthesis.speak(utt);
+  sfxTap();
+}
+
 function answerDictee(){
   const q=moduleQuestions[moduleIdx];
   const val=(document.getElementById('dicteeInput').value||'').trim().toLowerCase();
   const ok=val===q.woord.toLowerCase();
+  // speak correct word after answer so student hears it in context
+  speechSynthesis.cancel();
+  const utt=new SpeechSynthesisUtterance(q.woord);
+  utt.lang='nl-NL'; utt.rate=0.8;
+  setTimeout(()=>speechSynthesis.speak(utt), 300);
+  const sentence=q.zin.replace('_____', `"${q.woord}"`);
   showFeedback(ok,
-    ok ? `✅ Correct! "${q.woord}" — goed gespeld! 🎉`
-       : `❌ Het woord is: "${q.woord}"  (jij schreef: "${val}")`);
+    ok ? `✅ "${q.woord}" — goed gespeld! 🎉  →  ${sentence}`
+       : `❌ Het woord is: "${q.woord}"  (jij schreef: "${val}")  →  ${sentence}`);
   if(ok) moduleCorrect++;
-  setTimeout(()=>{ moduleIdx++; renderQuestion(); }, ok?1400:2200);
+  setTimeout(()=>{ moduleIdx++; renderQuestion(); }, ok?1800:2800);
 }
 
 // ── RAKET RACE ────────────────────────────────────────────
@@ -1876,14 +1898,18 @@ function startRaketTimer(){
   },500);
 }
 
-function answerRaket(chosen, correct){
+function answerRaket(btn){
   if(raketTimerInterval){ clearInterval(raketTimerInterval); raketTimerInterval=null; }
+  const q=moduleQuestions[moduleIdx];
+  const idx=parseInt(btn.dataset.idx);
+  const chosen=q.opts[idx];
+  const correct=q.correct;
   const ok=String(chosen)===String(correct);
   if(ok) moduleCorrect++;
-  document.querySelectorAll('.mc-btn').forEach(b=>{
+  document.querySelectorAll('.mc-btn').forEach((b,i)=>{
     b.disabled=true;
-    if(String(b.textContent).trim()===String(correct)) b.style.background='#4ADE80';
-    else if(String(b.textContent).trim()===String(chosen)&&!ok) b.style.background='#F87171';
+    if(String(q.opts[i])===String(correct)) b.style.background='#4ADE80';
+    else if(i===idx&&!ok) b.style.background='#F87171';
   });
   const fb=document.getElementById('feedback');
   if(fb){ fb.className='feedback '+(ok?'fb-ok':'fb-wrong'); fb.textContent=ok?'✅ Goed!':'❌ '+correct; fb.classList.remove('hidden'); }
