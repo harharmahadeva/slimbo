@@ -160,6 +160,16 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 .mc-green {border-color:rgba(61,217,160,.4);}  .mc-green::before{background:var(--green);}
 .mc-pink  {border-color:rgba(255,95,173,.4);}  .mc-pink::before{background:var(--pink);}
 .mc-teal  {border-color:rgba(47,212,192,.4);}  .mc-teal::before{background:var(--teal);}
+.mc-yellow{border-color:rgba(255,207,80,.4);}  .mc-yellow::before{background:var(--yellow);}
+.mc-red   {border-color:rgba(255,84,84,.4);}   .mc-red::before{background:var(--red);}
+/* raket race timer */
+.raket-timer{font-family:"Outfit",sans-serif;font-size:48px;font-weight:900;text-align:center;
+  color:var(--yellow);margin:6px 0 2px;}
+.raket-timer-lbl{font-size:11px;color:var(--text3);text-align:center;letter-spacing:1px;
+  text-transform:uppercase;margin-bottom:14px;}
+.raket-review-badge{font-size:10px;font-weight:700;color:var(--text3);background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.12);border-radius:99px;padding:2px 8px;
+  text-align:center;margin-bottom:8px;display:inline-block;}
 .mod-emoji{font-size:34px;display:block;margin-bottom:8px;}
 .mod-name{font-family:"Outfit",sans-serif;font-size:16px;font-weight:800;margin-bottom:3px;}
 .mod-desc{font-size:11px;color:var(--text3);line-height:1.4;}
@@ -740,6 +750,20 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
       <div class="mod-stars" id="mst-rekenen">☆☆☆</div>
       <div class="mod-badge" id="mbg-rekenen"></div>
     </div>
+    <div class="module-card mc-yellow" onclick="startModule('dictee')">
+      <span class="mod-emoji">📝</span>
+      <div class="mod-name">Dictee</div>
+      <div class="mod-desc">Spel de woorden goed!</div>
+      <div class="mod-stars" id="mst-dictee">☆☆☆</div>
+      <div class="mod-badge" id="mbg-dictee"></div>
+    </div>
+    <div class="module-card mc-red" onclick="startBonus()">
+      <span class="mod-emoji">🚀</span>
+      <div class="mod-name">Raket Race</div>
+      <div class="mod-desc">10 vragen — zo snel mogelijk!</div>
+      <div class="mod-stars" id="mst-bonus" style="font-size:13px;color:var(--text3)">Persoonlijk record</div>
+      <div class="mod-badge" id="mbg-bonus"></div>
+    </div>
   </div>
   <div id="blinkEye" title="Knipoog even!">👁️</div>
 </div>
@@ -1237,12 +1261,16 @@ function showHome(){
   document.getElementById('heroSub').textContent  = done===6 ? 'Alle modules klaar! 🏆' : done===0 ? 'Wat ga je vandaag leren? 🎯' : 'Goed bezig! ' + done + '/6 klaar! 💪';
 
   // module star badges
-  ['woorden','spelling','delen','lezen','tafels','rekenen'].forEach(m=>{
+  ['woorden','spelling','delen','lezen','tafels','rekenen','dictee'].forEach(m=>{
     const s = progress.stars?.[m] || 0;
     const done2 = (progress.todayDone||[]).includes(m);
     document.getElementById('mst-'+m).textContent = [1,2,3].map(i=>i<=s?'⭐':'☆').join('');
     document.getElementById('mbg-'+m).textContent = done2 ? '✅' : '';
   });
+  // raket race personal best
+  const pb = progress.raketBest || null;
+  const pbEl = document.getElementById('mst-bonus');
+  if(pbEl) pbEl.textContent = pb ? '⏱ Best: '+pb+'s' : 'Persoonlijk record';
 
   // tip rotation
   const tips = [
@@ -1396,6 +1424,53 @@ const LEZEN_VERHALEN = [
     ]},
 ];
 
+// ── DICTEE — Groep 4 syllabus ─────────────────────────────
+// Categories: ei/ij · au/ou · ui · ng/nk · sch · open syllable · compound
+const DICTEE_ZINNEN = [
+  // ei / ij
+  {woord:'trein',     zin:'De _____ rijdt heel snel door de tunnel.',      emoji:'🚂', hint:'Rijdt op rails',            cat:'ei/ij'},
+  {woord:'konijn',    zin:'Het _____ knabbelt aan een wortel.',             emoji:'🐰', hint:'Dier met lange oren',       cat:'ei/ij'},
+  {woord:'tijger',    zin:'De _____ heeft oranje strepen.',                 emoji:'🐯', hint:'Groot gestreept roofdier', cat:'ij'},
+  {woord:'rijden',    zin:'Ik leer _____ op mijn fiets.',                   emoji:'🚲', hint:'Op een fiets gaan',        cat:'ij'},
+  {woord:'schrijven', zin:'In de klas leer ik netjes _____ .',             emoji:'✏️', hint:'Letters maken op papier',  cat:'schr+ij'},
+  // au / ou
+  {woord:'blauw',     zin:'De lucht is helder _____.',                      emoji:'🌤️', hint:'Kleur van de lucht',       cat:'au'},
+  {woord:'goud',      zin:'De ring is gemaakt van _____.',                  emoji:'💍', hint:'Duur glanzend metaal',     cat:'ou'},
+  {woord:'auto',      zin:'Papa rijdt elke dag met de _____.',              emoji:'🚗', hint:'Voertuig op vier wielen',  cat:'au'},
+  {woord:'schouder',  zin:'Ik draag mijn tas op mijn _____.',              emoji:'🎒', hint:'Tussen hals en arm',       cat:'ou'},
+  {woord:'augustus',  zin:'In _____ zijn we op vakantie.',                  emoji:'☀️', hint:'Achtste maand',           cat:'au'},
+  // ui
+  {woord:'huis',      zin:'Wij wonen in een groot _____.',                  emoji:'🏠', hint:'Waar je woont',           cat:'ui'},
+  {woord:'tuin',      zin:'Mama plant bloemen in de _____.',                emoji:'🌸', hint:'Groen stuk bij je huis',  cat:'ui'},
+  {woord:'muis',      zin:'De kat jaagt op de kleine _____.',              emoji:'🐭', hint:'Klein grijs knaagdier',    cat:'ui'},
+  {woord:'ruit',      zin:'Ik veeg de _____ van het raam schoon.',         emoji:'🪟', hint:'Glasplaat in het raam',    cat:'ui'},
+  {woord:'buiten',    zin:'Na school speel ik _____ met mijn vrienden.',   emoji:'⛅', hint:'Niet binnen',             cat:'ui'},
+  // ng / nk
+  {woord:'ring',      zin:'Ze draagt een gouden _____ om haar vinger.',    emoji:'💍', hint:'Sieraad om vinger',       cat:'ng'},
+  {woord:'bank',      zin:'We zitten samen op de _____.',                   emoji:'🛋️', hint:'Meubel om op te zitten', cat:'nk'},
+  {woord:'vinger',    zin:'Ik heb tien _____ aan mijn handen.',            emoji:'👆', hint:'Deel van je hand',        cat:'ng'},
+  {woord:'drinken',   zin:'Na het sporten wil ik graag water _____.',      emoji:'💧', hint:'Water naar binnen',       cat:'nk'},
+  {woord:'zingen',    zin:'In de klas gaan we samen _____.',               emoji:'🎵', hint:'Met je stem muziek maken',cat:'ng'},
+  // sch
+  {woord:'school',    zin:'Elke ochtend loop ik naar de _____.',           emoji:'🏫', hint:'Gebouw waar je leert',    cat:'sch'},
+  {woord:'schoen',    zin:'Ik doe mijn _____ aan voordat ik naar buiten ga.',emoji:'👟',hint:'Draag je aan je voet',  cat:'sch'},
+  {woord:'schip',     zin:'Het grote _____ vaart over de zee.',            emoji:'🚢', hint:'Groot vaartuig',          cat:'sch'},
+  {woord:'schaar',    zin:'Ik knip papier met een _____.',                 emoji:'✂️', hint:'Gereedschap om te knippen',cat:'sch'},
+  // open syllable / dubbele klinker
+  {woord:'roos',      zin:'Mama krijgt een rode _____ van papa.',          emoji:'🌹', hint:'Mooie bloem met doorns',  cat:'oo'},
+  {woord:'boom',      zin:'De grote _____ heeft veel bladeren.',            emoji:'🌳', hint:'Groot groen gewas',       cat:'oo'},
+  {woord:'kaas',      zin:'Op mijn boterham doe ik graag _____.',         emoji:'🧀', hint:'Geel zuivelproduct',      cat:'aa'},
+  {woord:'aap',       zin:'De _____ slingert van tak tot tak.',            emoji:'🐒', hint:'Dier in de jungle',       cat:'aa'},
+  {woord:'peer',      zin:'Ik eet een groene _____ als tussendoortje.',   emoji:'🍐', hint:'Groen peervormig fruit', cat:'ee'},
+  {woord:'zeep',      zin:'Ik was mijn handen met _____.',                 emoji:'🧼', hint:'Gebruikt bij wassen',     cat:'ee'},
+  // compound / tricky
+  {woord:'vliegtuig', zin:'We vliegen met een _____ naar Spanje.',        emoji:'✈️', hint:'Vliegt door de lucht',    cat:'samenst.'},
+  {woord:'voetbal',   zin:'Na school speel ik _____ in het park.',        emoji:'⚽', hint:'Sport met een bal',       cat:'samenst.'},
+  {woord:'fietspad',  zin:'Ik rijd op het _____ naar school.',            emoji:'🚲', hint:'Weg voor fietsen',        cat:'samenst.'},
+  {woord:'waterval',  zin:'In de bergen zagen we een grote _____.',       emoji:'💧', hint:'Dalend water',            cat:'samenst.'},
+  {woord:'speeltuin', zin:'Na school ga ik naar de _____ om te spelen.', emoji:'🛝', hint:'Plek met schommels',      cat:'samenst.'},
+];
+
 // division sums: {a, b, diff:1/2/3}
 const DELEN_SOMMEN = [
   {a:6,  b:2, diff:1},{a:8,  b:2, diff:1},{a:10, b:5, diff:1},{a:9,  b:3, diff:1},{a:12, b:4, diff:1},
@@ -1504,6 +1579,9 @@ function buildQuestions(id){
     const level=Math.min(3,Math.floor(sessions/3)+1);
     moduleQuestions.push({type:'rekenen_ex', level});
     for(let i=0;i<8;i++) moduleQuestions.push({type:'rekenen',...genRekenSom(level)});
+  } else if(id==='dictee'){
+    shuffle(DICTEE_ZINNEN).slice(0,10).forEach(d=>
+      moduleQuestions.push({type:'dictee',...d}));
   }
 }
 
@@ -1612,6 +1690,30 @@ function renderQuestion(){
     body.innerHTML=`<div class="tafel-quiz-sum">${q.a} × ${q.b} = ?</div>
     <div class="mc-opts">${opts.map(o=>`<button class="mc-btn" onclick="answerTafels(${o},${q.ans})">${o}</button>`).join('')}</div>
     <div id="feedback" class="feedback hidden"></div>`;
+  } else if(q.type==='dictee'){
+    const blanked=q.zin.replace('_____',`<span style="letter-spacing:4px;color:var(--yellow);font-weight:900">${'_'.repeat(q.woord.length)}</span>`);
+    body.innerHTML=`
+      <div style="font-size:56px;text-align:center;display:block;margin:0 0 6px">${q.emoji}</div>
+      <div style="font-size:13px;text-align:center;color:var(--text3);margin-bottom:10px">💡 ${q.hint}</div>
+      <div style="font-size:19px;font-weight:700;text-align:center;line-height:1.8;padding:12px 8px;
+        background:var(--surface);border-radius:14px;border-left:4px solid var(--yellow);margin-bottom:14px">${blanked}</div>
+      <div style="font-size:12px;color:var(--text3);text-align:center;margin-bottom:6px">${q.woord.length} letters · categorie: <strong style="color:var(--purple)">${q.cat}</strong></div>
+      <input id="dicteeInput" class="word-input" type="text" placeholder="Typ het woord..."
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <button class="btn-primary" onclick="answerDictee()">Controleren ✓</button>
+      <div id="feedback" class="feedback hidden"></div>`;
+    setTimeout(()=>{ const i=document.getElementById('dicteeInput'); if(i) i.focus(); },200);
+    document.getElementById('dicteeInput').addEventListener('keyup',e=>{ if(e.key==='Enter') answerDictee(); });
+  } else if(q.type==='raket'){
+    // Raket Race MC question
+    body.innerHTML=`
+      <div class="raket-timer" id="raketTimer">0:00</div>
+      <div class="raket-timer-lbl">⏱ Raket Race — ${moduleIdx+1}/10</div>
+      ${q.reviewBadge?`<div style="text-align:center"><span class="raket-review-badge">herhaling</span></div>`:''}
+      <div style="font-size:22px;font-weight:700;text-align:center;margin:10px 0 14px;line-height:1.6">${q.vraag}</div>
+      <div class="mc-opts">${q.opts.map(o=>`<button class="mc-btn" onclick="answerRaket(${JSON.stringify(o)},${JSON.stringify(q.correct)})">${o}</button>`).join('')}</div>
+      <div id="feedback" class="feedback hidden"></div>`;
+    startRaketTimer();
   }
 
   showScreen('exerciseScreen');
@@ -1707,6 +1809,130 @@ function answerRekenen(){
   setTimeout(()=>{ moduleIdx++; renderQuestion(); },1600);
 }
 
+function answerDictee(){
+  const q=moduleQuestions[moduleIdx];
+  const val=(document.getElementById('dicteeInput').value||'').trim().toLowerCase();
+  const ok=val===q.woord.toLowerCase();
+  showFeedback(ok,
+    ok ? `✅ Correct! "${q.woord}" — goed gespeld! 🎉`
+       : `❌ Het woord is: "${q.woord}"  (jij schreef: "${val}")`);
+  if(ok) moduleCorrect++;
+  setTimeout(()=>{ moduleIdx++; renderQuestion(); }, ok?1400:2200);
+}
+
+// ── RAKET RACE ────────────────────────────────────────────
+let raketStartTs=0, raketTimerInterval=null;
+
+function startBonus(){
+  clearResume();
+  moduleId='bonus'; moduleIdx=0; moduleCorrect=0; exStep=0; exSteps=[];
+  raketStartTs=Date.now();
+  sfxModStart();
+  buildBonusQuestions();
+  renderQuestion();
+}
+
+function buildBonusQuestions(){
+  moduleQuestions=[];
+  const pool=[];
+
+  // spelling MC (3 random)
+  shuffle(DT_OEFENINGEN).slice(0,3).forEach(o=>{
+    pool.push({type:'raket', vraag:o.zin.replace('____','___?___'), opts:o.keuzes, correct:o.keuzes[o.correct]});
+  });
+  // rekenen MC (3 random, turn into MC)
+  for(let i=0;i<3;i++){
+    const s=genRekenSom(1);
+    const wrong1=s.ans+(rnd(1,9)), wrong2=s.ans-(rnd(1,9));
+    const opts=shuffle([s.ans, Math.abs(wrong1), Math.abs(wrong2)]);
+    pool.push({type:'raket', vraag:`${s.a} ${s.op} ${s.b} = ?`, opts, correct:s.ans});
+  }
+  // tafels MC (2 random from any table 2-10)
+  for(let i=0;i<2;i++){
+    const a=rnd(2,10), b=rnd(1,10), ans=a*b;
+    const wrong1=a*(b===10?b-1:b+1), wrong2=a*(b<=1?b+2:b-1);
+    pool.push({type:'raket', vraag:`${a} × ${b} = ?`, opts:shuffle([ans,wrong1,wrong2]), correct:ans});
+  }
+  // dictee MC (2 random words — pick right spelling from 3 options)
+  shuffle(DICTEE_ZINNEN).slice(0,2).forEach(d=>{
+    // generate 2 plausible misspellings
+    const w=d.woord;
+    const mis1=w.replace(/ei|ij/,'ij'===w.match(/ei|ij/)?.[0]?'ei':'ij')||w.slice(0,-1)+'t';
+    const mis2=w[0].toUpperCase()+w.slice(1,-1)+w.slice(-1).replace(/n$/,'nd')||w+'e';
+    const opts=shuffle([w, mis1!==w?mis1:w+'en', mis2!==w&&mis2!==mis1?mis2:w.slice(0,-1)]);
+    pool.push({type:'raket', vraag:`Welk woord is goed gespeld?\n"${d.zin.replace('_____','…')}"`, opts:[...new Set(opts)].slice(0,3), correct:w});
+  });
+
+  moduleQuestions=shuffle(pool).slice(0,10);
+}
+
+function startRaketTimer(){
+  if(raketTimerInterval) clearInterval(raketTimerInterval);
+  raketTimerInterval=setInterval(()=>{
+    const el=document.getElementById('raketTimer');
+    if(!el){ clearInterval(raketTimerInterval); return; }
+    const secs=Math.floor((Date.now()-raketStartTs)/1000);
+    el.textContent=Math.floor(secs/60)+':'+(secs%60).toString().padStart(2,'0');
+  },500);
+}
+
+function answerRaket(chosen, correct){
+  if(raketTimerInterval){ clearInterval(raketTimerInterval); raketTimerInterval=null; }
+  const ok=String(chosen)===String(correct);
+  if(ok) moduleCorrect++;
+  document.querySelectorAll('.mc-btn').forEach(b=>{
+    b.disabled=true;
+    if(String(b.textContent).trim()===String(correct)) b.style.background='#4ADE80';
+    else if(String(b.textContent).trim()===String(chosen)&&!ok) b.style.background='#F87171';
+  });
+  const fb=document.getElementById('feedback');
+  if(fb){ fb.className='feedback '+(ok?'fb-ok':'fb-wrong'); fb.textContent=ok?'✅ Goed!':'❌ '+correct; fb.classList.remove('hidden'); }
+  if(ok) sfxCorrect(); else sfxWrong();
+  setTimeout(()=>{ moduleIdx++; if(moduleIdx>=moduleQuestions.length) showRaketResult(); else renderQuestion(); },900);
+}
+
+function showRaketResult(){
+  if(raketTimerInterval){ clearInterval(raketTimerInterval); raketTimerInterval=null; }
+  const totalMs=Date.now()-raketStartTs;
+  const totalSecs=Math.round(totalMs/1000);
+  const mins=Math.floor(totalSecs/60), secs=totalSecs%60;
+  const timeStr=mins>0?`${mins}m ${secs}s`:`${secs}s`;
+  const pct=Math.round(moduleCorrect/10*100);
+  const stars=pct>=90?3:pct>=70?2:1;
+
+  // save personal best
+  const prev=progress.raketBest||9999;
+  const newBest=totalSecs<prev;
+  if(newBest) progress.raketBest=totalSecs;
+  progress.totalStars=(progress.totalStars||0)+stars;
+  if(!progress.sessions) progress.sessions=[];
+  progress.sessions.push({module:'bonus',score:pct,stars,ts:Date.now()});
+  saveProgress(); clearResume(); sfxFanfare();
+
+  const ex=document.getElementById('exerciseScreen');
+  ex.innerHTML=`<div class="ex-body" style="min-height:100vh;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;padding:32px 20px;text-align:center">
+    <div style="font-size:72px;animation:popIn .5s ease">🚀</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:30px;font-weight:900;
+      background:linear-gradient(135deg,var(--yellow),var(--orange));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:12px 0 4px">
+      Raket Race klaar!
+    </div>
+    <div style="font-size:48px;font-weight:900;color:var(--yellow);font-family:'Outfit',sans-serif;margin:8px 0">${timeStr}</div>
+    ${newBest?`<div style="font-size:14px;color:var(--green);font-weight:700;margin-bottom:6px">⚡ Nieuw persoonlijk record!</div>`
+             :`<div style="font-size:13px;color:var(--text3);margin-bottom:6px">Record: ${prev}s</div>`}
+    <div style="font-size:16px;color:var(--text2);margin-bottom:8px">${moduleCorrect}/10 goed · ${'⭐'.repeat(stars)}</div>
+    <div style="font-size:13px;color:var(--text3);margin-bottom:24px">${
+      pct===100?'Perfect! Jij bent een echte raket! 🚀':
+      pct>=80?'Waanzinnig goed! 💪':
+      pct>=60?'Goed bezig! Oefenen maakt perfect! 🎯':
+      'Blijf oefenen, het gaat steeds beter! 💡'}</div>
+    <button class="btn-primary" onclick="startBonus()" style="max-width:280px">🔄 Nog een race</button>
+    <button class="btn-secondary" onclick="goHome()" style="max-width:280px;margin-top:10px">🏠 Terug naar huis</button>
+  </div>`;
+  showScreen('exerciseScreen');
+}
+
 // ── TAFELS PICKER ─────────────────────────────────────────
 function renderTafelPicker(){
   const ex=document.getElementById('exerciseScreen');
@@ -1763,12 +1989,23 @@ function selectTafel(n){
 }
 
 function renderTafelAdaptive(){
-  const pool = tafelUnmastered();
-  if(pool.length===0){ showTafelsMastered(); return; }
+  const unmastered = tafelUnmastered();
+  if(unmastered.length===0){ showTafelsMastered(); return; }
+
+  // When ≤3 facts remain, interleave mastered ones as warm-up (1:1 ratio)
+  // so Devvrat gets breathing room instead of grinding the same 2 facts.
+  let pool;
+  if(unmastered.length<=3){
+    const mastered=Array.from({length:10},(_,i)=>i+1).filter(b=>isFactMastered(tafelN,b));
+    pool=[...unmastered,...shuffle(mastered).slice(0,unmastered.length)];
+  } else {
+    pool=unmastered;
+  }
 
   // pick randomly, never repeat same fact back-to-back
   const eligible = pool.length>1 ? pool.filter(b=>b!==tafelLastB) : pool;
   const b = eligible[Math.floor(Math.random()*eligible.length)];
+  const isReview = !unmastered.includes(b);
   tafelLastB = b;
   tafelCurrentFact = {a:tafelN, b, ans:tafelN*b};
 
@@ -1783,7 +2020,7 @@ function renderTafelAdaptive(){
   }
   const opts=shuffle([...dset]);
 
-  const mc   = 10-pool.length;
+  const mc   = 10-unmastered.length;
   const pct  = Math.round(mc/10*100);
   const ex   = document.getElementById('exerciseScreen');
   ex.innerHTML=`
@@ -1806,6 +2043,7 @@ function renderTafelAdaptive(){
     </div>
     <div class="speed-bar"><div class="speed-bar-fill" style="width:${pct}%"></div></div>
     <div style="font-size:11px;color:var(--text3);text-align:center;margin-bottom:14px">${mc} van 10 gememoreerd</div>
+    ${isReview?`<div style="text-align:center;margin-bottom:6px"><span class="raket-review-badge">✓ herhaling — al gememoreerd!</span></div>`:''}
     <div class="tafel-quiz-sum">${tafelN} × ${b} = ?</div>
     <div id="speedHint" style="min-height:22px;font-size:13px;text-align:center;color:var(--text3);margin-bottom:6px"></div>
     <div class="mc-opts">${opts.map(o=>`<button class="mc-btn" onclick="answerTafelAdaptive(${o},${correct})">${o}</button>`).join('')}</div>
