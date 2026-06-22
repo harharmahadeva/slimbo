@@ -658,6 +658,7 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
     <div class="home-logo">🚀 Slimbo</div>
     <div style="display:flex;gap:8px;align-items:center">
       <div class="streak-chip" id="streakChip">🔥 1</div>
+      <button class="logout-btn" id="muteBtn" onclick="toggleMute()" title="Geluid aan/uit"></button>
       <button class="logout-btn" onclick="logout()">Uit</button>
     </div>
   </div>
@@ -918,7 +919,8 @@ function saveMsgs(m){ localStorage.setItem(MSG_KEY, JSON.stringify(m)); }
 
 // ── AUDIO ENGINE ─────────────────────────────────────────
 let _actx = null;
-let _muted = localStorage.getItem('slimbo_mute') === '1';
+// default muted; student can toggle on home screen
+let _muted = localStorage.getItem('slimbo_mute') !== '0';
 function _ctx(){
   if(!_actx) _actx = new (window.AudioContext || window.webkitAudioContext)();
   return _actx;
@@ -937,6 +939,17 @@ function _tone(freq, dur, type='sine', vol=0.18, delay=0){
   }catch(e){}
 }
 // Musical chimes
+function toggleMute(){
+  _muted = !_muted;
+  localStorage.setItem('slimbo_mute', _muted ? '1' : '0');
+  const btn = document.getElementById('muteBtn');
+  if(btn) btn.textContent = _muted ? '🔇' : '🔊';
+}
+function updateMuteBtn(){
+  const btn = document.getElementById('muteBtn');
+  if(btn) btn.textContent = _muted ? '🔇' : '🔊';
+}
+
 function sfxCorrect(){ _tone(523,.09); _tone(659,.09,undefined,undefined,.1); _tone(784,.18,undefined,undefined,.2); }
 function sfxWrong(){ _tone(320,.14,'triangle',.14); _tone(240,.22,'triangle',.1,.16); }
 function sfxFanfare(){ [523,659,784,1047,1319].forEach((f,i)=>_tone(f,.16,'sine',.16,i*.09)); }
@@ -1281,6 +1294,7 @@ function showHome(){
   ];
   document.getElementById('dailyTip').innerHTML = tips[new Date().getDay() % tips.length];
 
+  updateMuteBtn();
   // messages from Sandy
   renderMsgBanners();
   renderResumeBanner();
