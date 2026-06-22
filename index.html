@@ -2228,7 +2228,41 @@ function selectTafel(n){
   tafelN=n; tafelFactHistory={}; tafelLastB=-1;
   moduleId='tafels'; moduleCorrect=0; moduleQuestions=[];
   sfxModStart();
-  renderTafelAdaptive();
+  renderTafelLearn();
+}
+
+function renderTafelLearn(){
+  const ex=document.getElementById('exerciseScreen');
+  const rows=Array.from({length:10},(_,i)=>{
+    const b=i+1, ans=tafelN*b;
+    return `<div class="tafel-learn-row" style="animation-delay:${i*0.08}s">
+      <div class="tafel-eq">${tafelN} × ${b}</div>
+      <div style="font-size:22px;color:var(--text3);font-weight:800">=</div>
+      <div class="tafel-ans" style="font-size:26px">${ans}</div>
+      <div class="tafel-vis">${'●'.repeat(Math.min(b,5))}${b>5?'+':''}</div>
+    </div>`;
+  }).join('');
+
+  ex.innerHTML=`
+    <div class="ex-header">
+      <button class="btn-icon" onclick="renderTafelPicker()">←</button>
+      <div style="flex:1;text-align:center;font-family:'Outfit',sans-serif;font-weight:800;font-size:17px">Tafel van ${tafelN}</div>
+      <div style="width:46px"></div>
+    </div>
+    <div class="ex-body" style="padding:16px">
+      <div style="text-align:center;font-size:13px;color:var(--text3);font-weight:700;
+        text-transform:uppercase;letter-spacing:.6px;margin-bottom:18px">
+        📖 Leer eerst — dan oefenen!
+      </div>
+      <div class="tafel-learn-card" style="padding:20px 22px">
+        ${rows}
+      </div>
+      <button class="btn-primary" onclick="renderTafelAdaptive()"
+        style="width:100%;margin-top:20px">
+        ✅ Ik ken ze! Start oefenen →
+      </button>
+    </div>`;
+  showScreen('exerciseScreen');
 }
 
 function renderTafelAdaptive(){

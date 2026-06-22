@@ -5,6 +5,12 @@ Format: [v{MAJOR}.{MINOR}.{PATCH}] — YYYY-MM-DD
 
 ---
 
+## [v1.13.0] — 2026-06-23
+### Changed
+- **Tafels — learn before test**: after picking a table, a learn screen now appears showing all 10 facts (4×1=4 through 4×10=40) with a staggered slide-in animation before the adaptive quiz begins. "✅ Ik ken ze! Start oefenen →" button advances to the quiz. Back arrow returns to the table picker.
+
+---
+
 ## [v1.12.0] — 2026-06-22
 ### Security (OWASP hardening)
 - **CSP meta tag** added — restricts script/style/font/connect sources
