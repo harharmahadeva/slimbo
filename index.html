@@ -6,206 +6,567 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Slimbo">
-<meta name="theme-color" content="#0D0D1A">
+<meta name="theme-color" content="#12111A">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/icon.svg">
 <title>Slimbo</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* ══════════════════════════════════════════
+   TOKENS — eye-friendly warm palette
+══════════════════════════════════════════ */
 :root{
-  --bg:#0D0D1A;--surface:#131325;--card:#1A1A30;--card2:#20203A;--border:#2D2D55;
-  --orange:#FF6B35;--og:rgba(255,107,53,.18);
-  --yellow:#FFD23F;--yg:rgba(255,210,63,.18);
-  --green:#06D6A0;--gg:rgba(6,214,160,.18);
-  --blue:#38BDF8;--bg2:rgba(56,189,248,.18);
-  --purple:#A855F7;--pg:rgba(168,85,247,.18);
-  --pink:#FF47A3;--pkg:rgba(255,71,163,.18);
-  --red:#FF4444;--rg:rgba(255,68,68,.15);
-  --text:#F0F0FF;--text2:#B8B8D8;--text3:#7878A8;--r:20px;
+  --bg:#12111A; --surface:#1C1B28; --card:#222134; --card2:#2A2840; --border:#35335A;
+  --orange:#FF7A45; --og:rgba(255,122,69,.18);
+  --yellow:#FFCF50; --yg:rgba(255,207,80,.18);
+  --green:#3DD9A0;  --gg:rgba(61,217,160,.18);
+  --blue:#5BC4F5;   --bg2:rgba(91,196,245,.18);
+  --purple:#B570F7; --pg:rgba(181,112,247,.18);
+  --pink:#FF5FAD;   --pkg:rgba(255,95,173,.18);
+  --teal:#2FD4C0;   --tg:rgba(47,212,192,.18);
+  --red:#FF5454;    --rg:rgba(255,84,84,.15);
+  --text:#EDE8DC; --text2:#C4BEAE; --text3:#7E7B9A; --r:20px;
+  --ring-c:326.73px; /* 2π×52 */
 }
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:#060610;color:var(--text);font-family:"Space Grotesk",sans-serif;min-height:100vh;overflow-x:hidden;font-size:17px;line-height:1.6;display:flex;justify-content:center;}
+/* warm tint stages injected by JS */
+.warm1{filter:sepia(.1) brightness(.97);}
+.warm2{filter:sepia(.2) brightness(.93);}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{background:#070610;color:var(--text);font-family:"Space Grotesk",sans-serif;
+  min-height:100vh;overflow-x:hidden;font-size:17px;line-height:1.6;
+  display:flex;justify-content:center;}
 body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:radial-gradient(ellipse 700px 500px at 10% 0%,rgba(168,85,247,.22) 0%,transparent 65%),
-  radial-gradient(ellipse 600px 500px at 90% 100%,rgba(255,107,53,.2) 0%,transparent 65%),
-  radial-gradient(ellipse 400px 300px at 50% 50%,rgba(6,214,160,.08) 0%,transparent 65%);}
+  background:radial-gradient(ellipse 700px 500px at 10% 0%,rgba(181,112,247,.2) 0%,transparent 65%),
+             radial-gradient(ellipse 600px 500px at 90% 100%,rgba(255,122,69,.18) 0%,transparent 65%),
+             radial-gradient(ellipse 400px 300px at 50% 50%,rgba(61,217,160,.07) 0%,transparent 65%);}
 
-/* phone shell on desktop */
-#appShell{width:100%;max-width:480px;min-height:100vh;background:var(--bg);position:relative;box-shadow:0 0 60px rgba(0,0,0,.8);}
-
+/* ── APP SHELL ── */
+#appShell{width:100%;max-width:480px;min-height:100vh;background:var(--bg);
+  position:relative;box-shadow:0 0 80px rgba(0,0,0,.9);overflow:hidden;}
 .screen{position:absolute;inset:0;z-index:10;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .hidden{display:none!important;}
 
+/* ── OVERLAYS (above everything) ── */
+.overlay{position:absolute;inset:0;z-index:500;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:24px;}
+#breakOverlay{background:linear-gradient(160deg,#0A1A2E 0%,#0D0D1A 100%);}
+#alarmOverlay{background:linear-gradient(160deg,#1A0A0A 0%,#0D0D1A 100%);}
+#lockedOverlay{background:linear-gradient(160deg,#080818 0%,#0D0D1A 100%);}
+#pinOverlay{background:rgba(0,0,0,.85);backdrop-filter:blur(12px);}
+
 /* ── LOADING ── */
 #loadingScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);}
-.load-rocket{font-size:64px;animation:bounce 0.8s infinite alternate;}
-@keyframes bounce{0%{transform:translateY(0)}100%{transform:translateY(-16px)}}
-.load-title{font-family:"Outfit",sans-serif;font-size:36px;font-weight:900;background:linear-gradient(135deg,var(--yellow),var(--orange),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-top:12px;}
+.load-rocket{font-size:64px;animation:bounce .8s infinite alternate;}
+.load-title{font-family:"Outfit",sans-serif;font-size:36px;font-weight:900;
+  background:linear-gradient(135deg,var(--yellow),var(--orange),var(--pink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-top:12px;}
 .load-sub{font-size:15px;color:var(--text3);margin-top:6px;}
-.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin 0.8s linear infinite;margin-top:20px;}
-@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--orange);
+  border-radius:50%;animation:spin .8s linear infinite;margin-top:20px;}
 
 /* ── LOGIN ── */
-#loginScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 20px;background:linear-gradient(160deg,#0D0D1A 0%,#1A0A30 50%,#0D1A30 100%);}
+#loginScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;padding:32px 20px;
+  background:linear-gradient(160deg,#12111A 0%,#1A0A2E 50%,#0D1A28 100%);}
 .login-rocket{font-size:72px;margin-bottom:4px;animation:wobble 2s ease-in-out infinite;}
-@keyframes wobble{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
-.login-brand{font-family:"Outfit",sans-serif;font-size:48px;font-weight:900;background:linear-gradient(135deg,var(--yellow),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;}
+.login-brand{font-family:"Outfit",sans-serif;font-size:48px;font-weight:900;
+  background:linear-gradient(135deg,var(--yellow),var(--orange));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;}
 .login-tag{font-size:15px;color:var(--text3);margin-bottom:28px;}
-.login-card{background:rgba(255,255,255,.07);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.15);border-radius:28px;padding:28px 24px;width:100%;max-width:400px;}
-.login-field{margin-bottom:16px;}
-.login-label{font-size:13px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;}
-.login-input{width:100%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.12);color:var(--text);border-radius:14px;padding:14px 16px;font-size:18px;outline:none;font-family:"Space Grotesk",sans-serif;transition:all .2s;-webkit-text-size-adjust:100%;}
-.login-input:focus{border-color:var(--orange);background:rgba(255,107,53,.08);}
-.login-btn{width:100%;background:linear-gradient(135deg,var(--orange),var(--pink));color:#fff;border:none;border-radius:14px;padding:16px;font-size:18px;font-weight:800;cursor:pointer;font-family:"Outfit",sans-serif;margin-top:8px;transition:all .2s;letter-spacing:.5px;}
+.login-card{background:rgba(255,255,255,.06);backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,.12);border-radius:28px;padding:28px 24px;width:100%;}
+.login-label{font-size:13px;font-weight:700;color:var(--text3);text-transform:uppercase;
+  letter-spacing:1px;margin-bottom:6px;display:block;}
+.login-input{width:100%;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.1);
+  color:var(--text);border-radius:14px;padding:14px 16px;font-size:18px;outline:none;
+  font-family:"Space Grotesk",sans-serif;transition:all .2s;margin-bottom:14px;
+  -webkit-text-size-adjust:100%;}
+.login-input:focus{border-color:var(--orange);background:rgba(255,122,69,.08);}
+.login-btn{width:100%;background:linear-gradient(135deg,var(--orange),var(--pink));
+  color:#fff;border:none;border-radius:14px;padding:16px;font-size:18px;font-weight:800;
+  cursor:pointer;font-family:"Outfit",sans-serif;margin-top:4px;transition:all .2s;letter-spacing:.5px;}
 .login-btn:active{transform:scale(.97);}
 .login-err{color:var(--red);font-size:14px;text-align:center;margin-top:10px;min-height:20px;}
 
 /* ── HOME ── */
-#homeScreen{min-height:100vh;padding:0 0 100px;}
-.home-header{display:flex;align-items:center;justify-content:space-between;padding:safe 16px 12px;padding-top:max(env(safe-area-inset-top),12px);background:rgba(13,13,26,.9);backdrop-filter:blur(10px);position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);}
-.home-logo{font-family:"Outfit",sans-serif;font-size:22px;font-weight:900;background:linear-gradient(135deg,var(--yellow),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.home-streak{display:flex;align-items:center;gap:5px;font-size:14px;font-weight:700;color:var(--yellow);background:var(--yg);border:1px solid rgba(255,210,63,.3);padding:6px 12px;border-radius:99px;}
-.logout-btn{background:transparent;border:1px solid var(--border);color:var(--text3);border-radius:99px;padding:7px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:"Space Grotesk",sans-serif;}
+#homeScreen{min-height:100vh;padding-bottom:100px;}
+.home-header{display:flex;align-items:center;justify-content:space-between;
+  padding:max(env(safe-area-inset-top),12px) 16px 12px;
+  background:rgba(18,17,26,.92);backdrop-filter:blur(12px);
+  position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);}
+.home-logo{font-family:"Outfit",sans-serif;font-size:22px;font-weight:900;
+  background:linear-gradient(135deg,var(--yellow),var(--orange));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.streak-chip{display:flex;align-items:center;gap:5px;font-size:14px;font-weight:700;
+  color:var(--yellow);background:var(--yg);border:1px solid rgba(255,207,80,.3);
+  padding:6px 12px;border-radius:99px;}
+.logout-btn{background:transparent;border:1px solid var(--border);color:var(--text3);
+  border-radius:99px;padding:7px 13px;font-size:13px;font-weight:600;cursor:pointer;
+  font-family:"Space Grotesk",sans-serif;}
 
-.home-hero{padding:20px 16px 16px;text-align:center;}
-.hero-greeting{font-size:16px;color:var(--text3);}
-.hero-name{font-family:"Outfit",sans-serif;font-size:36px;font-weight:900;background:linear-gradient(135deg,var(--yellow),var(--orange),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1;}
-.hero-sub{font-size:15px;color:var(--text2);margin-top:6px;}
+/* hero + time ring */
+.home-hero{padding:20px 16px 8px;display:flex;align-items:center;gap:16px;}
+.time-ring-wrap{flex-shrink:0;position:relative;width:88px;height:88px;}
+.time-ring-wrap svg{transform:rotate(-90deg);}
+.time-ring-wrap .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;}
+.ring-mins{font-family:"Outfit",sans-serif;font-size:18px;font-weight:900;color:var(--yellow);line-height:1;}
+.ring-label{font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.hero-text{flex:1;}
+.hero-greeting{font-size:14px;color:var(--text3);}
+.hero-name{font-family:"Outfit",sans-serif;font-size:30px;font-weight:900;
+  background:linear-gradient(135deg,var(--yellow),var(--orange),var(--pink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1;}
+.hero-sub{font-size:13px;color:var(--text2);margin-top:4px;}
+.hero-goal{font-size:12px;margin-top:4px;color:var(--text3);}
+.hero-goal.done{color:var(--green);font-weight:700;}
 
-.stars-row{display:flex;align-items:center;justify-content:center;gap:6px;margin:14px 16px;padding:14px;background:var(--card);border-radius:16px;border:1px solid var(--border);}
-.star-total{font-size:13px;font-weight:700;color:var(--text3);}
-.star-count{font-family:"Outfit",sans-serif;font-size:28px;font-weight:900;color:var(--yellow);}
+/* blink eye corner */
+#blinkEye{position:absolute;bottom:8px;right:8px;font-size:22px;opacity:0;
+  transition:opacity .4s;pointer-events:none;}
+#blinkEye.show{opacity:1;animation:pulse 2s infinite;}
 
+/* message banner */
+.msg-banner{margin:10px 16px;background:linear-gradient(135deg,rgba(255,207,80,.12),rgba(255,122,69,.1));
+  border:1px solid rgba(255,207,80,.35);border-radius:14px;padding:12px 16px;
+  display:flex;align-items:flex-start;gap:10px;}
+.msg-banner-text{flex:1;font-size:14px;color:var(--text2);line-height:1.5;}
+.msg-sender{font-weight:700;color:var(--yellow);}
+.msg-dismiss{background:transparent;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0 4px;line-height:1;}
+
+/* stats row */
+.stats-row{display:flex;gap:8px;padding:10px 16px;}
+.stat-pill{flex:1;background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:10px 8px;text-align:center;}
+.stat-pill-val{font-family:"Outfit",sans-serif;font-size:22px;font-weight:900;color:var(--yellow);}
+.stat-pill-lbl{font-size:11px;color:var(--text3);font-weight:600;}
+
+.daily-tip{margin:0 16px 14px;background:var(--card);border-radius:14px;padding:12px 16px;
+  border-left:4px solid var(--yellow);font-size:13px;line-height:1.6;color:var(--text2);}
+.daily-tip strong{color:var(--yellow);}
+
+/* modules grid */
 .modules-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px;}
-.module-card{background:var(--card);border:2px solid var(--border);border-radius:20px;padding:18px 14px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;text-decoration:none;display:block;}
-.module-card:active{transform:scale(.96);}
-.module-card.done{opacity:.7;}
-.module-card::before{content:"";position:absolute;top:-30px;right:-30px;width:100px;height:100px;border-radius:50%;opacity:.15;}
-.module-card.orange{border-color:rgba(255,107,53,.4);}
-.module-card.orange::before{background:var(--orange);}
-.module-card.purple{border-color:rgba(168,85,247,.4);}
-.module-card.purple::before{background:var(--purple);}
-.module-card.blue{border-color:rgba(56,189,248,.4);}
-.module-card.blue::before{background:var(--blue);}
-.module-card.green{border-color:rgba(6,214,160,.4);}
-.module-card.green::before{background:var(--green);}
-.module-emoji{font-size:36px;display:block;margin-bottom:8px;}
-.module-name{font-family:"Outfit",sans-serif;font-size:17px;font-weight:800;margin-bottom:3px;}
-.module-desc{font-size:12px;color:var(--text3);line-height:1.4;}
-.module-stars{display:flex;gap:3px;margin-top:10px;}
-.module-star{font-size:16px;}
-.module-badge{position:absolute;top:10px;right:10px;font-size:18px;}
+.module-card{background:var(--card);border:2px solid var(--border);border-radius:20px;
+  padding:18px 14px;cursor:pointer;transition:transform .15s;position:relative;overflow:hidden;}
+.module-card:active{transform:scale(.95);}
+.module-card::before{content:"";position:absolute;top:-30px;right:-30px;width:100px;
+  height:100px;border-radius:50%;opacity:.14;}
+.mc-orange{border-color:rgba(255,122,69,.4);} .mc-orange::before{background:var(--orange);}
+.mc-purple{border-color:rgba(181,112,247,.4);} .mc-purple::before{background:var(--purple);}
+.mc-blue  {border-color:rgba(91,196,245,.4);}  .mc-blue::before{background:var(--blue);}
+.mc-green {border-color:rgba(61,217,160,.4);}  .mc-green::before{background:var(--green);}
+.mc-pink  {border-color:rgba(255,95,173,.4);}  .mc-pink::before{background:var(--pink);}
+.mc-teal  {border-color:rgba(47,212,192,.4);}  .mc-teal::before{background:var(--teal);}
+.mod-emoji{font-size:34px;display:block;margin-bottom:8px;}
+.mod-name{font-family:"Outfit",sans-serif;font-size:16px;font-weight:800;margin-bottom:3px;}
+.mod-desc{font-size:11px;color:var(--text3);line-height:1.4;}
+.mod-stars{display:flex;gap:2px;margin-top:10px;font-size:15px;}
+.mod-badge{position:absolute;top:10px;right:10px;font-size:18px;}
 
-.daily-msg{margin:14px 16px;background:var(--card);border-radius:16px;padding:14px 16px;border-left:4px solid var(--yellow);font-size:14px;line-height:1.6;}
-.daily-msg strong{color:var(--yellow);}
+/* ── EXERCISE ── */
+#exerciseScreen{min-height:100vh;padding-bottom:24px;}
+.ex-header{display:flex;align-items:center;gap:10px;
+  padding:max(env(safe-area-inset-top),12px) 16px 12px;
+  background:rgba(18,17,26,.96);backdrop-filter:blur(10px);
+  position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);}
+.ex-back{background:transparent;border:1px solid var(--border);color:var(--text2);
+  border-radius:99px;padding:8px 16px;font-size:14px;font-weight:600;cursor:pointer;
+  font-family:"Space Grotesk",sans-serif;min-height:44px;}
+.ex-title{font-family:"Outfit",sans-serif;font-size:19px;font-weight:800;flex:1;}
+.ex-score-chip{font-size:13px;color:var(--text3);background:var(--card);
+  padding:5px 10px;border-radius:99px;}
+.ex-prog-bar{height:5px;background:var(--border);border-radius:99px;margin:0 16px;}
+.ex-prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--orange),var(--pink));transition:width .4s ease;}
+.ex-prog-labels{display:flex;justify-content:space-between;padding:5px 16px 0;font-size:12px;color:var(--text3);}
+.ex-body{padding:14px 16px;}
+.ex-card{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px;}
 
-/* ── EXERCISE SCREEN ── */
-#exerciseScreen{min-height:100vh;padding:0 0 24px;}
-.ex-header{display:flex;align-items:center;gap:10px;padding:max(env(safe-area-inset-top),12px) 16px 12px;background:rgba(13,13,26,.95);backdrop-filter:blur(10px);position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);}
-.ex-back{background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:99px;padding:8px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:"Space Grotesk",sans-serif;min-height:44px;}
-.ex-title{font-family:"Outfit",sans-serif;font-size:20px;font-weight:800;flex:1;}
-.ex-progress-bar{height:6px;background:var(--border);border-radius:99px;margin:0 16px 0;}
-.ex-progress-fill{height:100%;border-radius:99px;transition:width .4s ease;background:linear-gradient(90deg,var(--orange),var(--pink));}
-.ex-progress-label{display:flex;justify-content:space-between;padding:6px 16px 0;font-size:13px;color:var(--text3);}
+/* answer buttons */
+.opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+.opt-btn{background:var(--card2);border:2px solid var(--border);color:var(--text);
+  border-radius:16px;padding:16px 10px;font-size:16px;font-weight:700;cursor:pointer;
+  transition:all .15s;font-family:"Space Grotesk",sans-serif;text-align:center;min-height:62px;}
+.opt-btn:active{transform:scale(.94);}
+.opt-btn.correct{background:var(--gg);border-color:var(--green);color:var(--green);}
+.opt-btn.wrong  {background:var(--rg);border-color:var(--red);color:var(--red);}
+.opt-btn.reveal {background:var(--gg);border-color:var(--green);color:var(--green);opacity:.5;}
+.opt-btn:disabled{cursor:default;}
 
-.ex-body{padding:16px;}
-.ex-card{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:14px;}
-
-/* Woordenschat */
-.word-big{font-family:"Outfit",sans-serif;font-size:56px;font-weight:900;text-align:center;padding:10px 0;background:linear-gradient(135deg,var(--yellow),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;}
-.word-emoji{font-size:64px;text-align:center;display:block;margin:8px 0;}
-.word-hint{font-size:15px;color:var(--text3);text-align:center;font-style:italic;}
-.word-sentence{font-size:16px;color:var(--text2);text-align:center;margin-top:10px;padding:12px;background:var(--surface);border-radius:12px;line-height:1.6;}
-.word-sentence strong{color:var(--yellow);}
-
-.options-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
-.option-btn{background:var(--card2);border:2px solid var(--border);color:var(--text);border-radius:16px;padding:16px 12px;font-size:17px;font-weight:700;cursor:pointer;transition:all .2s;font-family:"Space Grotesk",sans-serif;text-align:center;min-height:64px;}
-.option-btn:active{transform:scale(.95);}
-.option-btn.correct{background:var(--gg);border-color:var(--green);color:var(--green);}
-.option-btn.wrong{background:var(--rg);border-color:var(--red);color:var(--red);}
-.option-btn.reveal{background:var(--gg);border-color:var(--green);color:var(--green);opacity:.5;}
-
-/* D/T Spelling */
-.dt-sentence{font-size:24px;font-weight:700;text-align:center;line-height:1.6;color:var(--text);padding:16px 10px;}
-.dt-blank{display:inline-block;min-width:80px;border-bottom:3px solid var(--purple);color:var(--purple);text-align:center;}
-.dt-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
-.dt-btn{background:var(--pg);border:2px solid rgba(168,85,247,.4);color:var(--purple);border-radius:16px;padding:18px 12px;font-size:22px;font-weight:800;cursor:pointer;transition:all .2s;font-family:"Outfit",sans-serif;text-align:center;min-height:68px;}
-.dt-btn:active{transform:scale(.95);}
-.dt-btn.correct{background:var(--gg);border-color:var(--green);color:var(--green);}
-.dt-btn.wrong{background:var(--rg);border-color:var(--red);color:var(--red);}
-.dt-rule{font-size:14px;color:var(--text2);background:var(--surface);border-radius:12px;padding:12px;margin-top:12px;line-height:1.7;border-left:3px solid var(--purple);}
-.dt-rule strong{color:var(--purple);}
-
-/* Delen */
-.delen-visual{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:16px 0;font-size:28px;}
-.delen-group{display:flex;gap:4px;padding:8px;background:var(--surface);border-radius:12px;border:2px solid var(--border);}
-.delen-sum{font-family:"Outfit",sans-serif;font-size:42px;font-weight:900;text-align:center;color:var(--blue);margin:8px 0;}
-.delen-word{font-size:17px;color:var(--text2);text-align:center;margin-bottom:14px;line-height:1.5;}
-.number-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px;}
-.number-btn{background:var(--bg2);border:2px solid rgba(56,189,248,.4);color:var(--blue);border-radius:14px;padding:16px 8px;font-size:22px;font-weight:800;cursor:pointer;transition:all .2s;font-family:"Outfit",sans-serif;text-align:center;min-height:60px;}
-.number-btn:active{transform:scale(.95);}
-.number-btn.correct{background:var(--gg);border-color:var(--green);color:var(--green);}
-.number-btn.wrong{background:var(--rg);border-color:var(--red);color:var(--red);}
-
-/* Begrijpend lezen */
-.lezen-text{font-size:18px;line-height:1.9;color:var(--text);background:var(--surface);border-radius:16px;padding:18px;margin-bottom:16px;border-left:4px solid var(--green);}
-.lezen-title{font-family:"Outfit",sans-serif;font-size:22px;font-weight:800;color:var(--green);margin-bottom:10px;}
-.lezen-q{font-size:18px;font-weight:700;color:var(--text);margin-bottom:12px;line-height:1.5;}
-.lezen-opts{display:flex;flex-direction:column;gap:10px;}
-.lezen-opt{background:var(--card2);border:2px solid var(--border);color:var(--text);border-radius:14px;padding:16px;font-size:16px;font-weight:600;cursor:pointer;transition:all .2s;font-family:"Space Grotesk",sans-serif;text-align:left;min-height:54px;}
-.lezen-opt:active{transform:scale(.98);}
-.lezen-opt.correct{background:var(--gg);border-color:var(--green);color:var(--green);}
-.lezen-opt.wrong{background:var(--rg);border-color:var(--red);color:var(--red);}
-
-/* Feedback */
-.feedback-box{border-radius:14px;padding:14px 16px;font-size:15px;font-weight:600;margin-top:10px;line-height:1.6;display:none;}
+.feedback-box{border-radius:14px;padding:13px 15px;font-size:14px;font-weight:600;
+  margin-top:10px;line-height:1.6;display:none;}
 .feedback-box.show{display:block;}
 .feedback-box.good{background:var(--gg);border:1px solid var(--green);color:var(--green);}
-.feedback-box.bad{background:var(--rg);border:1px solid var(--red);color:var(--red);}
-.feedback-funny{font-size:13px;color:var(--text2);margin-top:6px;font-style:italic;}
+.feedback-box.bad {background:var(--rg);border:1px solid var(--red);color:var(--red);}
+.fb-funny{font-size:12px;color:var(--text2);margin-top:5px;font-style:italic;}
 
-.next-btn{width:100%;background:linear-gradient(135deg,var(--orange),var(--pink));color:#fff;border:none;border-radius:16px;padding:18px;font-size:18px;font-weight:800;cursor:pointer;font-family:"Outfit",sans-serif;margin-top:14px;transition:all .2s;letter-spacing:.5px;min-height:58px;}
+.next-btn{width:100%;background:linear-gradient(135deg,var(--orange),var(--pink));color:#fff;
+  border:none;border-radius:16px;padding:17px;font-size:17px;font-weight:800;cursor:pointer;
+  font-family:"Outfit",sans-serif;margin-top:12px;transition:transform .15s;min-height:56px;}
 .next-btn:active{transform:scale(.97);}
-.next-btn:disabled{opacity:.4;cursor:default;}
+.next-btn.hidden{display:none;}
+
+/* ── ANIMATED EXAMPLE (Delen/Rekenen) ── */
+.teacher-row{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;}
+.teacher-avatar{font-size:34px;flex-shrink:0;animation:wobble 3s ease-in-out infinite;}
+.teacher-bubble{background:rgba(255,207,80,.1);border:1px solid rgba(255,207,80,.28);
+  border-radius:0 16px 16px 16px;padding:12px 14px;font-size:15px;color:var(--text);
+  line-height:1.7;flex:1;}
+.teacher-bubble strong{color:var(--yellow);}
+.objects-stage{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;
+  padding:12px 0;min-height:56px;}
+.obj-item{font-size:26px;animation:popIn .3s ease forwards;opacity:0;}
+.groups-stage{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:10px 0;}
+.group-box{background:rgba(91,196,245,.1);border:2px dashed rgba(91,196,245,.4);
+  border-radius:14px;padding:8px;display:flex;flex-wrap:wrap;gap:4px;
+  min-width:56px;min-height:56px;align-items:center;justify-content:center;
+  transition:all .4s;}
+.group-box.lit{background:rgba(61,217,160,.15);border-color:var(--green);}
+.sum-reveal{font-family:"Outfit",sans-serif;font-size:34px;font-weight:900;text-align:center;
+  color:var(--yellow);animation:popIn .4s ease;padding:10px 0;}
+.step-dots{display:flex;gap:7px;justify-content:center;margin:10px 0;}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all .3s;}
+.step-dot.active{background:var(--orange);width:18px;border-radius:4px;}
+.step-dot.done{background:var(--green);}
+.ex-step-btn{flex:1;background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;
+  border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:800;cursor:pointer;
+  font-family:"Outfit",sans-serif;min-height:52px;}
+.ex-go-btn{flex:1;background:linear-gradient(135deg,var(--green),var(--teal));color:#fff;
+  border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:800;cursor:pointer;
+  font-family:"Outfit",sans-serif;min-height:52px;}
+.ex-btn-row{display:flex;gap:10px;margin-top:14px;}
+
+/* splits method */
+.splits-row{padding:8px 0;border-bottom:1px solid var(--border);font-size:15px;
+  animation:slideIn .3s ease forwards;opacity:0;}
+.splits-row strong{color:var(--yellow);}
+.splits-row .acc{color:var(--green);font-weight:800;}
+
+/* ── TAFELS ── */
+.tafel-picker-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:8px 0;}
+.tafel-btn{background:var(--card2);border:2px solid rgba(255,95,173,.3);color:var(--pink);
+  border-radius:14px;padding:13px 6px;font-size:20px;font-weight:800;cursor:pointer;
+  font-family:"Outfit",sans-serif;text-align:center;min-height:54px;transition:all .15s;}
+.tafel-btn:active{transform:scale(.92);}
+.tafel-btn.mastered{background:var(--gg);border-color:var(--green);color:var(--green);}
+.tafel-learn-row{display:flex;align-items:center;gap:10px;padding:9px 0;
+  border-bottom:1px solid var(--border);animation:slideIn .35s ease forwards;opacity:0;}
+.tafel-eq{font-family:"Outfit",sans-serif;font-size:20px;font-weight:900;color:var(--pink);min-width:90px;}
+.tafel-ans{font-family:"Outfit",sans-serif;font-size:20px;font-weight:900;color:var(--yellow);}
+.tafel-vis{font-size:16px;flex:1;text-align:right;opacity:.55;}
+.tafel-quiz-sum{font-family:"Outfit",sans-serif;font-size:46px;font-weight:900;
+  text-align:center;color:var(--pink);margin:14px 0;}
+
+/* ── REKENEN ── */
+.rekenen-sum{font-family:"Outfit",sans-serif;font-size:40px;font-weight:900;text-align:center;margin:12px 0;}
+.rekenen-sum.plus{color:var(--teal);}
+.rekenen-sum.min {color:var(--orange);}
+.rek-word{font-size:15px;color:var(--text2);text-align:center;margin-bottom:12px;line-height:1.5;}
+.num-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;}
+.num-btn{background:var(--bg2);border:2px solid rgba(91,196,245,.4);color:var(--blue);
+  border-radius:14px;padding:14px 6px;font-size:19px;font-weight:800;cursor:pointer;
+  font-family:"Outfit",sans-serif;text-align:center;min-height:58px;transition:all .15s;}
+.num-btn.correct{background:var(--gg);border-color:var(--green);color:var(--green);}
+.num-btn.wrong  {background:var(--rg);border-color:var(--red);color:var(--red);}
+.num-btn:disabled{cursor:default;}
+
+/* ── SPELLING ── */
+.dt-sentence{font-size:22px;font-weight:700;text-align:center;line-height:1.7;
+  color:var(--text);padding:14px 8px;}
+.dt-blank{display:inline-block;min-width:70px;border-bottom:3px solid var(--purple);
+  color:var(--purple);text-align:center;}
+.dt-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+.dt-btn{background:var(--pg);border:2px solid rgba(181,112,247,.4);color:var(--purple);
+  border-radius:16px;padding:17px 10px;font-size:21px;font-weight:800;cursor:pointer;
+  font-family:"Outfit",sans-serif;text-align:center;min-height:66px;transition:all .15s;}
+.dt-btn.correct{background:var(--gg);border-color:var(--green);color:var(--green);}
+.dt-btn.wrong  {background:var(--rg);border-color:var(--red);color:var(--red);}
+.dt-rule{font-size:13px;color:var(--text2);background:var(--surface);border-radius:12px;
+  padding:11px 13px;margin-top:10px;line-height:1.8;border-left:3px solid var(--purple);}
+.dt-rule strong{color:var(--purple);}
+
+/* ── WOORDENSCHAT ── */
+.word-emoji{font-size:60px;text-align:center;display:block;margin:8px 0;}
+.word-sentence{font-size:15px;color:var(--text2);text-align:center;margin-top:10px;
+  padding:11px;background:var(--surface);border-radius:12px;line-height:1.7;}
+.word-sentence strong{color:var(--yellow);}
+
+/* ── LEZEN ── */
+.lezen-card{background:var(--surface);border-radius:16px;padding:16px;margin-bottom:14px;
+  border-left:4px solid var(--green);}
+.lezen-title{font-family:"Outfit",sans-serif;font-size:20px;font-weight:800;
+  color:var(--green);margin-bottom:10px;}
+.lezen-text{font-size:17px;line-height:1.95;color:var(--text);}
+.lezen-q{font-size:17px;font-weight:700;color:var(--text);margin-bottom:12px;line-height:1.5;}
+.lezen-opts{display:flex;flex-direction:column;gap:9px;}
+.lezen-opt{background:var(--card2);border:2px solid var(--border);color:var(--text);
+  border-radius:14px;padding:15px;font-size:15px;font-weight:600;cursor:pointer;
+  font-family:"Space Grotesk",sans-serif;text-align:left;min-height:52px;transition:all .15s;}
+.lezen-opt.correct{background:var(--gg);border-color:var(--green);color:var(--green);}
+.lezen-opt.wrong  {background:var(--rg);border-color:var(--red);color:var(--red);}
 
 /* ── CELEBRATION ── */
-#celebrationScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 20px;text-align:center;}
-.cel-emoji{font-size:80px;animation:pop .5s ease;}
-@keyframes pop{0%{transform:scale(0)}80%{transform:scale(1.2)}100%{transform:scale(1)}}
-.cel-title{font-family:"Outfit",sans-serif;font-size:40px;font-weight:900;background:linear-gradient(135deg,var(--yellow),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:12px 0 6px;line-height:1.1;}
-.cel-sub{font-size:17px;color:var(--text2);margin-bottom:20px;line-height:1.6;}
-.cel-stars{font-size:52px;margin:8px 0 16px;letter-spacing:8px;}
-.cel-score{font-family:"Outfit",sans-serif;font-size:28px;font-weight:900;color:var(--yellow);margin-bottom:20px;}
-.cel-btn{background:linear-gradient(135deg,var(--orange),var(--pink));color:#fff;border:none;border-radius:16px;padding:18px 32px;font-size:18px;font-weight:800;cursor:pointer;font-family:"Outfit",sans-serif;transition:all .2s;margin:6px;min-height:58px;}
+#celebrationScreen{display:flex;flex-direction:column;align-items:center;
+  justify-content:center;min-height:100vh;padding:32px 20px;text-align:center;}
+.cel-emoji{font-size:80px;animation:popIn .5s ease;}
+.cel-title{font-family:"Outfit",sans-serif;font-size:38px;font-weight:900;
+  background:linear-gradient(135deg,var(--yellow),var(--orange));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:12px 0 6px;line-height:1.1;}
+.cel-sub{font-size:16px;color:var(--text2);margin-bottom:16px;line-height:1.6;}
+.cel-stars{font-size:50px;margin:6px 0 14px;letter-spacing:8px;}
+.cel-score{font-family:"Outfit",sans-serif;font-size:26px;font-weight:900;
+  color:var(--yellow);margin-bottom:16px;}
+.cel-fun{font-size:14px;color:var(--text3);margin-bottom:20px;font-style:italic;padding:0 16px;}
+.cel-btn{background:linear-gradient(135deg,var(--orange),var(--pink));color:#fff;border:none;
+  border-radius:16px;padding:17px 30px;font-size:17px;font-weight:800;cursor:pointer;
+  font-family:"Outfit",sans-serif;margin:5px;min-height:56px;transition:transform .15s;}
 .cel-btn.outline{background:transparent;border:2px solid var(--border);color:var(--text2);}
-.cel-btn:active{transform:scale(.97);}
-.confetti-wrap{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:200;overflow:hidden;}
-.confetto{position:absolute;width:10px;height:10px;border-radius:2px;animation:fall linear forwards;}
-@keyframes fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+.cel-btn:active{transform:scale(.96);}
+.confetti-wrap{position:absolute;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:200;overflow:hidden;}
+.confetto{position:absolute;width:9px;height:9px;border-radius:2px;animation:fall linear forwards;}
 
-/* ── BRAM MODE ── */
-.bram-header{background:linear-gradient(135deg,var(--purple),var(--blue));padding:16px;text-align:center;border-radius:0 0 20px 20px;margin-bottom:16px;}
-.bram-title{font-family:"Outfit",sans-serif;font-size:22px;font-weight:900;color:#fff;}
-.bram-sub{font-size:13px;color:rgba(255,255,255,.8);}
-.bram-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin:0 16px 12px;}
-.bram-mod-title{font-family:"Outfit",sans-serif;font-size:17px;font-weight:800;margin-bottom:10px;}
-.bram-item{background:var(--surface);border-radius:10px;padding:12px;margin-bottom:8px;font-size:14px;line-height:1.6;}
-.bram-item-q{font-weight:700;color:var(--text);}
-.bram-item-a{color:var(--green);font-size:13px;}
-.bram-flag{background:transparent;border:1px solid var(--orange);color:var(--orange);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;margin-top:6px;font-family:"Space Grotesk",sans-serif;}
-.bram-flag.flagged{background:var(--og);color:var(--orange);}
-.bram-progress{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin:0 16px 12px;}
-.bram-stat{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:15px;}
-.bram-stat:last-child{border:none;}
+/* ── EYE BREAK OVERLAY ── */
+.break-eye{font-size:72px;animation:blink 1.5s step-end infinite;margin-bottom:16px;}
+@keyframes blink{0%,95%{opacity:1}96%,100%{opacity:0}}
+.break-title{font-family:"Outfit",sans-serif;font-size:30px;font-weight:900;
+  color:var(--teal);text-align:center;margin-bottom:8px;}
+.break-sub{font-size:15px;color:var(--text2);text-align:center;margin-bottom:20px;
+  line-height:1.7;max-width:320px;}
+.break-timer{font-family:"Outfit",sans-serif;font-size:64px;font-weight:900;
+  color:var(--yellow);text-align:center;margin:16px 0;}
+.break-timer-lbl{font-size:13px;color:var(--text3);text-align:center;margin-top:-12px;
+  margin-bottom:20px;text-transform:uppercase;letter-spacing:1px;}
+.break-skip{background:transparent;border:1px solid var(--border);color:var(--text3);
+  border-radius:99px;padding:10px 20px;font-size:13px;cursor:pointer;
+  font-family:"Space Grotesk",sans-serif;margin-top:12px;}
+
+/* ── ALARM OVERLAY ── */
+.alarm-rocket{font-size:80px;animation:shake .4s ease-in-out infinite;}
+@keyframes shake{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+.alarm-title{font-family:"Outfit",sans-serif;font-size:32px;font-weight:900;
+  color:var(--orange);text-align:center;margin:16px 0 8px;}
+.alarm-sub{font-size:15px;color:var(--text2);text-align:center;margin-bottom:24px;
+  line-height:1.7;max-width:300px;}
+.alarm-countdown{font-family:"Outfit",sans-serif;font-size:48px;font-weight:900;
+  color:var(--yellow);text-align:center;margin:12px 0;}
+.alarm-go{width:100%;max-width:300px;background:linear-gradient(135deg,var(--orange),var(--pink));
+  color:#fff;border:none;border-radius:16px;padding:18px;font-size:18px;font-weight:800;
+  cursor:pointer;font-family:"Outfit",sans-serif;min-height:58px;}
+
+/* ── LOCKED OVERLAY ── */
+.locked-rocket{font-size:72px;animation:float 3s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.locked-title{font-family:"Outfit",sans-serif;font-size:28px;font-weight:900;
+  color:var(--text3);text-align:center;margin:16px 0 8px;}
+.locked-sub{font-size:15px;color:var(--text3);text-align:center;margin-bottom:8px;line-height:1.7;}
+.locked-time{font-family:"Outfit",sans-serif;font-size:56px;font-weight:900;
+  color:var(--text2);text-align:center;margin:16px 0;}
+
+/* ── PIN OVERLAY ── */
+.pin-card{background:var(--card);border-radius:24px;padding:28px 24px;width:100%;max-width:320px;text-align:center;}
+.pin-title{font-family:"Outfit",sans-serif;font-size:22px;font-weight:900;color:var(--text);margin-bottom:6px;}
+.pin-sub{font-size:14px;color:var(--text3);margin-bottom:20px;line-height:1.5;}
+.pin-input{width:100%;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.1);
+  color:var(--text);border-radius:14px;padding:14px 16px;font-size:22px;letter-spacing:8px;
+  outline:none;text-align:center;font-family:"Space Grotesk",sans-serif;margin-bottom:14px;}
+.pin-ok{width:100%;background:linear-gradient(135deg,var(--orange),var(--pink));color:#fff;
+  border:none;border-radius:14px;padding:15px;font-size:16px;font-weight:800;cursor:pointer;
+  font-family:"Outfit",sans-serif;margin-bottom:10px;}
+.pin-cancel{background:transparent;border:1px solid var(--border);color:var(--text3);
+  border-radius:99px;padding:9px 20px;font-size:13px;cursor:pointer;font-family:"Space Grotesk",sans-serif;}
+.pin-err{color:var(--red);font-size:13px;margin-top:8px;min-height:18px;}
+
+/* ── SANDY SCREEN ── */
+#sandyScreen{min-height:100vh;padding-bottom:60px;}
+.sandy-hdr{background:linear-gradient(135deg,#0F2A40,#1A1040);
+  padding:max(env(safe-area-inset-top),14px) 16px 14px;
+  border-bottom:1px solid rgba(91,196,245,.2);position:sticky;top:0;z-index:100;
+  backdrop-filter:blur(12px);}
+.sandy-hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;}
+.sandy-hdr-title{font-family:"Outfit",sans-serif;font-size:20px;font-weight:900;color:#fff;}
+.sandy-hdr-sub{font-size:12px;color:rgba(255,255,255,.5);}
+.sandy-section{padding:14px 16px 0;}
+.sandy-sec-title{font-size:12px;font-weight:700;text-transform:uppercase;
+  letter-spacing:1.2px;color:rgba(91,196,245,.75);margin-bottom:10px;}
+.s-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.s-stat{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);
+  border-radius:16px;padding:14px;text-align:center;}
+.s-stat-val{font-family:"Outfit",sans-serif;font-size:30px;font-weight:900;color:var(--yellow);}
+.s-stat-lbl{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px;}
+.s-stat-trend{font-size:11px;margin-top:4px;}
+.s-stat-trend.up{color:var(--green);}
+.s-stat-trend.down{color:var(--red);}
+.mod-perf{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  border-radius:16px;padding:14px;margin-bottom:9px;}
+.mod-perf-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.mod-perf-name{font-size:14px;font-weight:700;color:#fff;}
+.mod-perf-pct{font-family:"Outfit",sans-serif;font-size:19px;font-weight:900;}
+.perf-bar-bg{height:7px;background:rgba(255,255,255,.09);border-radius:99px;overflow:hidden;}
+.perf-bar-fill{height:100%;border-radius:99px;transition:width 1.2s ease;}
+.perf-meta{display:flex;gap:12px;margin-top:7px;font-size:11px;color:rgba(255,255,255,.35);}
+.area-card{border-radius:14px;padding:12px 14px;margin-bottom:8px;font-size:13px;line-height:1.6;}
+.area-card.strong {background:rgba(61,217,160,.1);border:1px solid rgba(61,217,160,.28);color:var(--green);}
+.area-card.weak   {background:rgba(255,84,84,.1);border:1px solid rgba(255,84,84,.28);color:var(--red);}
+.area-card.improve{background:rgba(255,207,80,.1);border:1px solid rgba(255,207,80,.28);color:var(--yellow);}
+.area-card-title{font-weight:700;margin-bottom:3px;}
+.session-row{display:flex;align-items:center;gap:10px;padding:9px 0;
+  border-bottom:1px solid rgba(255,255,255,.05);font-size:13px;}
+.session-icon{font-size:22px;}
+.session-info{flex:1;}
+.session-mod{font-weight:600;color:#fff;}
+.session-date{font-size:11px;color:rgba(255,255,255,.35);}
+.session-sc{font-family:"Outfit",sans-serif;font-size:17px;font-weight:900;}
+.session-sc.hi{color:var(--green);} .session-sc.mid{color:var(--yellow);} .session-sc.lo{color:var(--red);}
+.time-chart-bar{display:flex;align-items:flex-end;gap:6px;height:80px;padding-top:8px;}
+.tcb-col{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;}
+.tcb-bar-wrap{flex:1;width:100%;display:flex;align-items:flex-end;}
+.tcb-bar{width:100%;border-radius:4px 4px 0 0;min-height:4px;transition:height .8s ease;}
+.tcb-lbl{font-size:10px;color:rgba(255,255,255,.35);}
+.tcb-goal-line{position:relative;} /* just decorative */
+.msg-compose{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:14px;}
+.msg-textarea{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  color:#fff;border-radius:12px;padding:12px;font-size:14px;font-family:"Space Grotesk",sans-serif;
+  outline:none;resize:none;height:75px;margin-bottom:10px;}
+.msg-send-btn{width:100%;background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;
+  border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;
+  font-family:"Outfit",sans-serif;}
+.msg-hist-item{padding:9px;background:rgba(255,255,255,.04);border-radius:10px;
+  margin-top:8px;font-size:12px;color:rgba(255,255,255,.65);line-height:1.6;}
+.msg-hist-item .seen{font-size:10px;color:rgba(61,217,160,.7);margin-top:3px;}
+.msg-hist-item .unseen{font-size:10px;color:rgba(255,255,255,.25);margin-top:3px;}
+.min-goal-row{display:flex;align-items:center;gap:10px;margin-top:12px;}
+.min-goal-label{font-size:14px;color:rgba(255,255,255,.6);flex:1;}
+.min-goal-btn{background:var(--card2);border:1px solid var(--border);color:var(--text);
+  border-radius:10px;padding:8px 14px;font-size:14px;font-weight:700;cursor:pointer;
+  font-family:"Space Grotesk",sans-serif;}
+.min-goal-val{font-family:"Outfit",sans-serif;font-size:20px;font-weight:900;color:var(--yellow);min-width:60px;text-align:center;}
+
+/* ── BRAM SCREEN ── */
+#bramScreen{min-height:100vh;padding-bottom:60px;}
+.bram-hdr{background:linear-gradient(135deg,var(--purple),var(--blue));padding:16px;
+  text-align:center;border-radius:0 0 20px 20px;margin-bottom:14px;}
+.bram-hdr-title{font-family:"Outfit",sans-serif;font-size:21px;font-weight:900;color:#fff;}
+.bram-hdr-sub{font-size:13px;color:rgba(255,255,255,.75);}
+.bram-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:15px;margin:0 16px 12px;}
+.bram-card-title{font-family:"Outfit",sans-serif;font-size:16px;font-weight:800;margin-bottom:10px;}
+.bram-item{background:var(--surface);border-radius:10px;padding:11px;margin-bottom:7px;font-size:13px;line-height:1.6;}
+.bram-q{font-weight:700;color:var(--text);}
+.bram-a{color:var(--green);font-size:12px;margin-top:2px;}
+.bram-stat-row{display:flex;justify-content:space-between;align-items:center;
+  padding:8px 0;border-bottom:1px solid var(--border);font-size:14px;}
+.bram-stat-row:last-child{border:none;}
 .bram-stat-val{font-weight:800;color:var(--yellow);}
+.flag-btn{background:transparent;border:1px solid var(--orange);color:var(--orange);
+  border-radius:8px;padding:3px 9px;font-size:11px;cursor:pointer;margin-top:5px;
+  font-family:"Space Grotesk",sans-serif;}
+.flag-btn.on{background:var(--og);}
 
-@media(max-width:380px){.modules-grid{grid-template-columns:1fr;}.word-big{font-size:44px;}.delen-sum{font-size:34px;}}
+/* ── MISC ANIMATIONS ── */
+@keyframes bounce{0%{transform:translateY(0)}100%{transform:translateY(-16px)}}
+@keyframes wobble{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes popIn{0%{transform:scale(0);opacity:0}80%{transform:scale(1.25);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes slideIn{from{transform:translateX(-18px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+@keyframes fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+@keyframes stars-fly{0%{opacity:0;transform:translateY(20px)}50%{opacity:1}100%{opacity:0;transform:translateY(-40px)}}
+@keyframes confettiFall{0%{opacity:1;transform:translateY(-10px) rotate(0)}100%{opacity:0;transform:translateY(80vh) rotate(540deg)}}
+
+/* ── PART 2 ADDITIONS ── */
+.btn-primary{width:100%;background:linear-gradient(135deg,var(--orange),var(--pink));color:#fff;
+  border:none;border-radius:16px;padding:16px;font-size:16px;font-weight:800;cursor:pointer;
+  font-family:"Outfit",sans-serif;margin-top:10px;min-height:54px;transition:transform .15s;}
+.btn-primary:active{transform:scale(.97);}
+.btn-secondary{width:100%;background:rgba(255,255,255,.1);color:var(--text);
+  border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:14px;font-size:15px;
+  font-weight:700;cursor:pointer;font-family:"Outfit",sans-serif;margin-top:8px;min-height:50px;}
+.btn-icon{background:rgba(255,255,255,.1);border:none;color:var(--text);border-radius:50%;
+  width:40px;height:40px;font-size:18px;cursor:pointer;flex-shrink:0;}
+
+.ex-header{display:flex;align-items:center;gap:10px;padding:12px 16px 8px;
+  border-bottom:1px solid rgba(255,255,255,.07);}
+.ex-progress{font-size:.8rem;opacity:.6;flex-shrink:0;}
+
+.mc-opts{display:flex;flex-direction:column;gap:10px;margin-top:12px;}
+.mc-btn{background:var(--card2);border:2px solid rgba(255,255,255,.15);color:var(--text);
+  border-radius:14px;padding:15px 14px;font-size:16px;font-weight:700;cursor:pointer;
+  font-family:"Space Grotesk",sans-serif;text-align:left;min-height:52px;transition:all .15s;}
+.mc-btn:active:not(:disabled){transform:scale(.97);}
+.mc-btn:disabled{cursor:default;}
+
+.word-input{width:100%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.15);
+  color:var(--text);border-radius:14px;padding:14px 16px;font-size:18px;font-weight:700;
+  outline:none;font-family:"Space Grotesk",sans-serif;margin-top:10px;box-sizing:border-box;}
+.word-input:focus{border-color:var(--orange);}
+
+.feedback{border-radius:12px;padding:12px 14px;font-size:14px;font-weight:600;margin-top:10px;line-height:1.6;}
+.feedback.hidden{display:none;}
+.fb-ok{background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.4);color:#4ADE80;}
+.fb-wrong{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.4);color:#F87171;}
+
+.q-emoji{font-size:60px;text-align:center;display:block;margin:8px 0 4px;}
+.q-hint{font-size:14px;text-align:center;opacity:.65;margin-bottom:8px;}
+.scramble{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:10px 0;}
+.slet{background:rgba(255,207,80,.15);border:1px solid rgba(255,207,80,.4);color:var(--yellow);
+  border-radius:8px;padding:6px 10px;font-size:18px;font-weight:800;}
+.q-label{font-size:13px;opacity:.55;text-align:center;margin-bottom:4px;}
+.q-zin{font-size:20px;font-weight:700;text-align:center;line-height:1.7;padding:14px 8px;}
+.blank{display:inline-block;min-width:60px;border-bottom:3px solid var(--purple);color:var(--purple);}
+
+.delen-sum{font-family:"Outfit",sans-serif;font-size:42px;font-weight:900;
+  text-align:center;color:var(--teal);margin:14px 0;}
+.reken-sum{font-family:"Outfit",sans-serif;font-size:42px;font-weight:900;
+  text-align:center;color:var(--orange);margin:14px 0;}
+
+.story-title{font-family:"Outfit",sans-serif;font-size:20px;font-weight:800;
+  color:var(--green);margin-bottom:10px;}
+.story-text{font-size:16px;line-height:1.95;background:var(--surface);border-radius:14px;
+  padding:14px;border-left:4px solid var(--green);margin-bottom:14px;}
+.q-vraag{font-size:17px;font-weight:700;line-height:1.5;margin-bottom:12px;}
+
+.teacher-intro{font-size:14px;opacity:.7;margin-bottom:10px;}
+.ex-substep{font-size:14px;opacity:.65;margin-top:8px;padding:8px 12px;
+  background:rgba(255,255,255,.05);border-radius:10px;line-height:1.6;}
+.reveal-sum{font-size:24px;font-weight:900;color:var(--yellow);}
+.obj-stage{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:10px 0;}
+.groups-stage{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:10px 0;}
+.group-label{font-size:11px;opacity:.6;width:100%;text-align:center;margin-bottom:4px;}
+
+.tafel-picker-title{font-family:"Outfit",sans-serif;font-size:20px;font-weight:800;
+  text-align:center;margin:12px 0 16px;}
+.tafel-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0 4px;}
+.tafel-pick-btn{background:var(--card2);border:2px solid rgba(255,95,173,.3);color:var(--pink);
+  border-radius:14px;padding:14px 6px;font-size:20px;font-weight:800;cursor:pointer;
+  font-family:"Outfit",sans-serif;text-align:center;min-height:56px;transition:all .15s;}
+.tafel-pick-btn.mastered{background:var(--gg);border-color:var(--green);color:var(--green);}
+.tafel-learn-card{background:var(--card);border:2px solid rgba(255,207,80,.3);border-radius:20px;
+  padding:28px;text-align:center;margin:16px 0;}
+.tafel-num{font-family:"Outfit",sans-serif;font-size:52px;font-weight:900;color:var(--yellow);}
+.tafel-op{font-family:"Outfit",sans-serif;font-size:32px;font-weight:900;color:var(--text3);}
+.tafel-eq{font-family:"Outfit",sans-serif;font-size:28px;color:var(--text2);}
+.tafel-ans{font-family:"Outfit",sans-serif;font-size:52px;font-weight:900;color:var(--green);
+  transition:opacity .4s;}
+.tafel-quiz-sum{font-family:"Outfit",sans-serif;font-size:46px;font-weight:900;
+  text-align:center;color:var(--pink);margin:14px 0;}
+
+.sandy-header{display:flex;align-items:center;gap:10px;padding:14px 16px;
+  border-bottom:1px solid rgba(255,255,255,.07);position:sticky;top:0;
+  background:var(--bg);z-index:100;backdrop-filter:blur(12px);}
+.sandy-body{padding:12px 16px 60px;}
+.sandy-card{background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:14px 16px;margin-bottom:12px;}
+.sandy-card h3{font-family:"Outfit",sans-serif;font-size:16px;font-weight:800;margin:0 0 10px;}
+.stat-pill{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
+  border-radius:99px;padding:5px 12px;font-size:13px;font-weight:600;}
 </style>
 </head>
 <body>
 <div id="appShell">
 
-<!-- LOADING -->
+<!-- ══ LOADING ══ -->
 <div id="loadingScreen" class="screen">
   <div class="load-rocket">🚀</div>
   <div class="load-title">Slimbo</div>
@@ -213,820 +574,1322 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
   <div class="spinner"></div>
 </div>
 
-<!-- LOGIN -->
+<!-- ══ LOGIN ══ -->
 <div id="loginScreen" class="screen hidden">
   <div class="login-rocket">🚀</div>
   <div class="login-brand">Slimbo</div>
   <div class="login-tag">Leren is een superkracht! ⚡</div>
   <div class="login-card">
-    <div class="login-field">
-      <label class="login-label" for="loginName">Jouw naam</label>
-      <input class="login-input" id="loginName" type="text" placeholder="devvrat" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
-    </div>
-    <div class="login-field">
-      <label class="login-label" for="loginPin">PIN</label>
-      <input class="login-input" id="loginPin" type="password" inputmode="numeric" placeholder="••••" maxlength="6">
-    </div>
+    <label class="login-label" for="li_name">Naam</label>
+    <input class="login-input" id="li_name" type="text" placeholder="devvrat"
+      autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+    <label class="login-label" for="li_pin">PIN</label>
+    <input class="login-input" id="li_pin" type="password" inputmode="numeric" placeholder="••••" maxlength="6">
     <button class="login-btn" onclick="handleLogin()">🚀 Laten we gaan!</button>
     <div class="login-err" id="loginErr"></div>
   </div>
 </div>
 
-<!-- HOME -->
+<!-- ══ HOME ══ -->
 <div id="homeScreen" class="screen hidden">
   <div class="home-header">
     <div class="home-logo">🚀 Slimbo</div>
     <div style="display:flex;gap:8px;align-items:center">
-      <div class="home-streak" id="streakChip">🔥 1</div>
+      <div class="streak-chip" id="streakChip">🔥 1</div>
       <button class="logout-btn" onclick="logout()">Uit</button>
     </div>
   </div>
   <div class="home-hero">
-    <div class="hero-greeting" id="heroGreeting">Goedemorgen!</div>
-    <div class="hero-name" id="heroName">Devvrat!</div>
-    <div class="hero-sub" id="heroSub">Wat ga je vandaag leren? 🎯</div>
+    <div class="time-ring-wrap">
+      <svg width="88" height="88" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="52" fill="none" stroke="#35335A" stroke-width="9"/>
+        <circle id="ringFill" cx="60" cy="60" r="52" fill="none"
+          stroke="url(#ringGrad)" stroke-width="9" stroke-linecap="round"
+          stroke-dasharray="326.73" stroke-dashoffset="326.73"
+          style="transition:stroke-dashoffset 1s ease;"/>
+        <defs>
+          <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#FF7A45"/>
+            <stop offset="100%" stop-color="#FF5FAD"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="ring-center">
+        <div class="ring-mins" id="ringMins">0</div>
+        <div class="ring-label">min</div>
+      </div>
+    </div>
+    <div class="hero-text">
+      <div class="hero-greeting" id="heroGreeting">Goedemorgen!</div>
+      <div class="hero-name" id="heroName">Devvrat!</div>
+      <div class="hero-sub" id="heroSub">Wat ga je vandaag leren? 🎯</div>
+      <div class="hero-goal" id="heroGoal">Doel: 120 min 💪</div>
+    </div>
   </div>
-  <div class="stars-row">
-    <div>
-      <div class="star-total">Totaal sterren</div>
-      <div class="star-count" id="totalStars">⭐ 0</div>
+  <div id="msgBanners"></div>
+  <div class="stats-row">
+    <div class="stat-pill">
+      <div class="stat-pill-val" id="statStars">⭐ 0</div>
+      <div class="stat-pill-lbl">Sterren</div>
     </div>
-    <div style="width:1px;height:40px;background:var(--border);margin:0 12px"></div>
-    <div>
-      <div class="star-total">Vandaag klaar</div>
-      <div class="star-count" id="todayDone">0 / 4</div>
+    <div class="stat-pill">
+      <div class="stat-pill-val" id="statDone">0/6</div>
+      <div class="stat-pill-lbl">Vandaag</div>
     </div>
-    <div style="width:1px;height:40px;background:var(--border);margin:0 12px"></div>
-    <div>
-      <div class="star-total">Dagstreek 🔥</div>
-      <div class="star-count" id="streakNum">1</div>
+    <div class="stat-pill">
+      <div class="stat-pill-val" id="statStreak">🔥 1</div>
+      <div class="stat-pill-lbl">Dagstreek</div>
     </div>
   </div>
-  <div class="daily-msg" id="dailyMsg">
-    <strong>💡 Tip van de dag:</strong> Oefen elke dag een beetje — dan word je elke dag een beetje slimmer! 🧠
+  <div class="daily-tip" id="dailyTip">
+    <strong>💡 Tip:</strong> Elk woord dat je leert is een superkracht! 🧠
   </div>
   <div class="modules-grid">
-    <div class="module-card orange" onclick="startModule('woorden')">
-      <span class="module-emoji">📚</span>
-      <div class="module-name">Woordenschat</div>
-      <div class="module-desc">Leer nieuwe woorden!</div>
-      <div class="module-stars" id="stars-woorden">
-        <span class="module-star">☆</span><span class="module-star">☆</span><span class="module-star">☆</span>
-      </div>
-      <div class="module-badge" id="badge-woorden"></div>
+    <div class="module-card mc-orange" onclick="startModule('woorden')">
+      <span class="mod-emoji">📚</span>
+      <div class="mod-name">Woordenschat</div>
+      <div class="mod-desc">Leer nieuwe woorden!</div>
+      <div class="mod-stars" id="mst-woorden">☆☆☆</div>
+      <div class="mod-badge" id="mbg-woorden"></div>
     </div>
-    <div class="module-card purple" onclick="startModule('spelling')">
-      <span class="module-emoji">✏️</span>
-      <div class="module-name">Spelling d/t</div>
-      <div class="module-desc">D of T — jij weet het!</div>
-      <div class="module-stars" id="stars-spelling">
-        <span class="module-star">☆</span><span class="module-star">☆</span><span class="module-star">☆</span>
-      </div>
-      <div class="module-badge" id="badge-spelling"></div>
+    <div class="module-card mc-purple" onclick="startModule('spelling')">
+      <span class="mod-emoji">✏️</span>
+      <div class="mod-name">Spelling d/t</div>
+      <div class="mod-desc">D of T — jij weet het!</div>
+      <div class="mod-stars" id="mst-spelling">☆☆☆</div>
+      <div class="mod-badge" id="mbg-spelling"></div>
     </div>
-    <div class="module-card blue" onclick="startModule('delen')">
-      <span class="module-emoji">➗</span>
-      <div class="module-name">Delen</div>
-      <div class="module-desc">Sommen oplossen!</div>
-      <div class="module-stars" id="stars-delen">
-        <span class="module-star">☆</span><span class="module-star">☆</span><span class="module-star">☆</span>
-      </div>
-      <div class="module-badge" id="badge-delen"></div>
+    <div class="module-card mc-blue" onclick="startModule('delen')">
+      <span class="mod-emoji">➗</span>
+      <div class="mod-name">Delen</div>
+      <div class="mod-desc">Sommen oplossen!</div>
+      <div class="mod-stars" id="mst-delen">☆☆☆</div>
+      <div class="mod-badge" id="mbg-delen"></div>
     </div>
-    <div class="module-card green" onclick="startModule('lezen')">
-      <span class="module-emoji">📖</span>
-      <div class="module-name">Lezen</div>
-      <div class="module-desc">Lees en begrijp!</div>
-      <div class="module-stars" id="stars-lezen">
-        <span class="module-star">☆</span><span class="module-star">☆</span><span class="module-star">☆</span>
-      </div>
-      <div class="module-badge" id="badge-lezen"></div>
+    <div class="module-card mc-green" onclick="startModule('lezen')">
+      <span class="mod-emoji">📖</span>
+      <div class="mod-name">Lezen</div>
+      <div class="mod-desc">Lees en begrijp!</div>
+      <div class="mod-stars" id="mst-lezen">☆☆☆</div>
+      <div class="mod-badge" id="mbg-lezen"></div>
+    </div>
+    <div class="module-card mc-pink" onclick="startModule('tafels')">
+      <span class="mod-emoji">✖️</span>
+      <div class="mod-name">Tafels</div>
+      <div class="mod-desc">Vermenigvuldigen 1–20!</div>
+      <div class="mod-stars" id="mst-tafels">☆☆☆</div>
+      <div class="mod-badge" id="mbg-tafels"></div>
+    </div>
+    <div class="module-card mc-teal" onclick="startModule('rekenen')">
+      <span class="mod-emoji">🔢</span>
+      <div class="mod-name">Rekenen</div>
+      <div class="mod-desc">Optellen &amp; aftrekken!</div>
+      <div class="mod-stars" id="mst-rekenen">☆☆☆</div>
+      <div class="mod-badge" id="mbg-rekenen"></div>
     </div>
   </div>
+  <div id="blinkEye" title="Knipoog even!">👁️</div>
 </div>
 
-<!-- EXERCISE -->
+<!-- ══ EXERCISE ══ -->
 <div id="exerciseScreen" class="screen hidden">
   <div class="ex-header">
     <button class="ex-back" onclick="goHome()">← Terug</button>
-    <div class="ex-title" id="exTitle">Woordenschat</div>
-    <div style="font-size:14px;color:var(--text3)" id="exScore">0/0</div>
+    <div class="ex-title" id="exTitle"></div>
+    <div class="ex-score-chip" id="exScore">0/0</div>
   </div>
-  <div class="ex-progress-bar"><div class="ex-progress-fill" id="exProgressFill" style="width:0%"></div></div>
-  <div class="ex-progress-label"><span id="exProgressLabel">Vraag 1</span><span id="exProgressPct">0%</span></div>
+  <div class="ex-prog-bar"><div class="ex-prog-fill" id="exProgFill" style="width:0%"></div></div>
+  <div class="ex-prog-labels">
+    <span id="exProgLbl">Vraag 1</span>
+    <span id="exProgPct">0%</span>
+  </div>
   <div class="ex-body" id="exBody"></div>
 </div>
 
-<!-- CELEBRATION -->
+<!-- ══ CELEBRATION ══ -->
 <div id="celebrationScreen" class="screen hidden">
   <div class="confetti-wrap" id="confettiWrap"></div>
   <div class="cel-emoji" id="celEmoji">🏆</div>
-  <div class="cel-title" id="celTitle">Super gedaan!</div>
-  <div class="cel-sub" id="celSub">Jij bent een echte ster!</div>
+  <div class="cel-title" id="celTitle">Fantastisch!</div>
+  <div class="cel-sub"  id="celSub">Jij bent een echte ster!</div>
   <div class="cel-stars" id="celStars">⭐⭐⭐</div>
-  <div class="cel-score" id="celScore">10 / 10 goed!</div>
-  <div id="celFunMsg" style="font-size:15px;color:var(--text3);margin-bottom:20px;font-style:italic;padding:0 20px;text-align:center"></div>
+  <div class="cel-score" id="celScore">10/10 goed!</div>
+  <div class="cel-fun"  id="celFun"></div>
   <button class="cel-btn" onclick="goHome()">🏠 Terug naar huis</button>
-  <button class="cel-btn outline" id="celRetryBtn" onclick="retryModule()">🔄 Nog een keer</button>
+  <button class="cel-btn outline" onclick="retryModule()">🔄 Nog een keer</button>
 </div>
 
-<!-- BRAM REVIEW -->
+<!-- ══ BRAM ══ -->
 <div id="bramScreen" class="screen hidden" style="min-height:100vh;padding-bottom:60px;">
-  <div class="bram-header">
-    <div class="bram-title">👁️ Bram's Review Mode</div>
-    <div class="bram-sub">Bekijk alle inhoud en Devvrat's voortgang</div>
+  <div class="bram-hdr">
+    <div class="bram-hdr-title">👁️ Bram's Review Mode</div>
+    <div class="bram-hdr-sub">Bekijk alle inhoud en Devvrat's voortgang</div>
   </div>
-  <div id="bramBody" style="padding-bottom:20px;"></div>
+  <div id="bramBody"></div>
 </div>
 
+<!-- ══ SANDY ══ -->
+<div id="sandyScreen" class="screen hidden">
+  <div class="sandy-hdr">
+    <div class="sandy-hdr-top">
+      <div>
+        <div class="sandy-hdr-title">👨‍👩‍👦 Devvrat's Progress</div>
+        <div class="sandy-hdr-sub">Parent Dashboard · Slimbo</div>
+      </div>
+      <button class="logout-btn" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+  <div id="sandyBody"></div>
+</div>
+
+<!-- ══ EYE BREAK OVERLAY ══ -->
+<div id="breakOverlay" class="overlay hidden">
+  <div class="break-eye">👁️</div>
+  <div class="break-title">Oogpauze! 👀</div>
+  <div class="break-sub">
+    Je hebt al <strong id="breakMinsUsed">45</strong> minuten gespeeld!<br>
+    Kijk 5 minuten naar iets ver weg.<br>
+    <em>Dit is goed voor je ogen! 🌿</em>
+  </div>
+  <div class="break-timer" id="breakTimer">5:00</div>
+  <div class="break-timer-lbl">minuten rust</div>
+  <button class="break-skip" onclick="requestSkipBreak()">🔐 Overslaan (mama PIN)</button>
+</div>
+
+<!-- ══ ALARM OVERLAY ══ -->
+<div id="alarmOverlay" class="overlay hidden">
+  <div class="alarm-rocket">🚀</div>
+  <div class="alarm-title" id="alarmTitle">Hé Devvrat!</div>
+  <div class="alarm-sub" id="alarmSub">Tijd om te leren! 📚</div>
+  <div class="alarm-countdown" id="alarmCountdown"></div>
+  <button class="alarm-go" onclick="dismissAlarm()">🚀 Ik ga leren!</button>
+</div>
+
+<!-- ══ LOCKED OVERLAY ══ -->
+<div id="lockedOverlay" class="overlay hidden">
+  <div class="locked-rocket">🚀</div>
+  <div class="locked-title">Slimbo slaapt nu 😴</div>
+  <div class="locked-sub">De app is beschikbaar van <strong>07:00</strong> tot <strong>23:00</strong></div>
+  <div class="locked-time" id="lockedTime">06:45</div>
+  <div class="locked-sub" style="font-size:13px">Kom terug na 07:00!</div>
+</div>
+
+<!-- ══ PIN OVERLAY ══ -->
+<div id="pinOverlay" class="overlay hidden">
+  <div class="pin-card">
+    <div class="pin-title">🔐 Mama PIN</div>
+    <div class="pin-sub">Vraag mama om de PIN in te voeren om de pauze over te slaan.</div>
+    <input class="pin-input" id="pinInput" type="password" inputmode="numeric" maxlength="6" placeholder="••••">
+    <button class="pin-ok" onclick="checkSkipPin()">Bevestigen</button>
+    <button class="pin-cancel" onclick="cancelPin()">Annuleren</button>
+    <div class="pin-err" id="pinErr"></div>
+  </div>
+</div>
+
+</div><!-- /appShell -->
 <script>
-// ══════════════════════════════════════════════
-// ACCOUNTS
-// ══════════════════════════════════════════════
+'use strict';
+// ══════════════════════════════════════════════════════════
+//  PART 1 — ACCOUNTS · AUDIO · TIME TRACKING · ALARMS
+//           LOGIN · HOME · NAVIGATION
+// ══════════════════════════════════════════════════════════
+
+// ── CONFIG ──────────────────────────────────────────────
+const HOUR_START = 7;   // app unlocks
+const HOUR_END   = 23;  // app locks
+const BREAK_AFTER_MINS = 45;   // eye break trigger
+const BREAK_DURATION   = 300;  // seconds (5 min)
+const BLINK_INTERVAL   = 20;   // minutes between blink reminders
+const TICK_MS          = 30000; // timer tick interval
+
+// ── ACCOUNTS ────────────────────────────────────────────
 const ACCOUNTS = [
   {name:'devvrat', pin:'2016', displayName:'Devvrat', role:'student'},
-  {name:'bram',    pin:'9999', displayName:'Bram',    role:'reviewer'}
+  {name:'bram',    pin:'9999', displayName:'Bram',    role:'reviewer'},
+  {name:'sandy',   pin:'8003', displayName:'Sandy',   role:'parent'},
 ];
+const SKIP_PIN = '8003'; // Sandy's PIN to skip eye break
 
-// ══════════════════════════════════════════════
-// CONTENT
-// ══════════════════════════════════════════════
+let currentUser  = null;
+let progress     = {};
 
-// WOORDENSCHAT — 10 sets × 5 words = 50 words
-const WOORDEN_SETS = [
-  {thema:'🦋 Dieren', woorden:[
-    {woord:'vlinder',emoji:'🦋',en:'butterfly',zin:'De <strong>vlinder</strong> vliegt van bloem naar bloem. Net als een boodschapper!'},
-    {woord:'neushoorn',emoji:'🦏',en:'rhinoceros',zin:'De <strong>neushoorn</strong> heeft een grote hoorn op zijn neus. Handig als potlood!'},
-    {woord:'krokodil',emoji:'🐊',en:'crocodile',zin:'De <strong>krokodil</strong> wacht stil in het water. Net als jij op de bus!'},
-    {woord:'papegaai',emoji:'🦜',en:'parrot',zin:'De <strong>papegaai</strong> praat alles na. Zou jij dat ook kunnen?'},
-    {woord:'pinguïn',emoji:'🐧',en:'penguin',zin:'De <strong>pinguïn</strong> kan niet vliegen maar is een topzwemmer!'},
-  ]},
-  {thema:'🌋 Natuur', woorden:[
-    {woord:'vulkaan',emoji:'🌋',en:'volcano',zin:'De <strong>vulkaan</strong> spuwt vuur en lava. Net als juf op maandag!'},
-    {woord:'regenboog',emoji:'🌈',en:'rainbow',zin:'Na de regen zie je een mooie <strong>regenboog</strong>. Zeven kleuren!'},
-    {woord:'waterval',emoji:'💦',en:'waterfall',zin:'Het water valt van de berg — dat is een <strong>waterval</strong>. Heel luid!'},
-    {woord:'bliksem',emoji:'⚡',en:'lightning',zin:'De <strong>bliksem</strong> flitst door de lucht. Sneller dan een cheetah!'},
-    {woord:'woestijn',emoji:'🏜️',en:'desert',zin:'In de <strong>woestijn</strong> is het heel heet en droog. Geen REWE in de buurt!'},
-  ]},
-  {thema:'🍍 Eten', woorden:[
-    {woord:'ananas',emoji:'🍍',en:'pineapple',zin:'De <strong>ananas</strong> is zoet en zuur tegelijk. Een echte smaakbom!'},
-    {woord:'komkommer',emoji:'🥒',en:'cucumber',zin:'Een <strong>komkommer</strong> bestaat voor 96% uit water. Ideaal op een warme dag!'},
-    {woord:'knoflook',emoji:'🧄',en:'garlic',zin:'<strong>Knoflook</strong> ruikt sterk maar smaakt lekker. Vampieren haten het!'},
-    {woord:'spinazie',emoji:'🥬',en:'spinach',zin:'<strong>Spinazie</strong> maakt je sterk, net als Popeye. Probeer het maar!'},
-    {woord:'honing',emoji:'🍯',en:'honey',zin:'Bijen maken <strong>honing</strong>. Ze vliegen 1000 km voor één potje!'},
-  ]},
-  {thema:'👔 Beroepen', woorden:[
-    {woord:'brandweer',emoji:'🚒',en:'fire brigade',zin:'De <strong>brandweer</strong> blust brand en redt mensen. Echte superhelden!'},
-    {woord:'tandarts',emoji:'🦷',en:'dentist',zin:'De <strong>tandarts</strong> controleert je tanden. Poetsen = minder prikken!'},
-    {woord:'architect',emoji:'🏗️',en:'architect',zin:'Een <strong>architect</strong> tekent huizen en gebouwen. Creatief beroep!'},
-    {woord:'journalist',emoji:'📰',en:'journalist',zin:'Een <strong>journalist</strong> schrijft nieuws voor de krant of tv.'},
-    {woord:'dierenarts',emoji:'🐾',en:'vet',zin:'De <strong>dierenarts</strong> maakt zieke dieren beter. Dokter voor dieren!'},
-  ]},
-  {thema:'🚁 Transport', woorden:[
-    {woord:'helikopter',emoji:'🚁',en:'helicopter',zin:'Een <strong>helikopter</strong> kan omhoog gaan zonder te rijden. Vliegtuig maar cooler!'},
-    {woord:'onderzeeër',emoji:'🤿',en:'submarine',zin:'Een <strong>onderzeeër</strong> vaart onder water. Heel stil en geheim!'},
-    {woord:'tractor',emoji:'🚜',en:'tractor',zin:'De boer rijdt op een <strong>tractor</strong> over het land. Langzaam maar sterk!'},
-    {woord:'ambulance',emoji:'🚑',en:'ambulance',zin:'De <strong>ambulance</strong> rijdt snel naar zieke mensen. Met sirene!'},
-    {woord:'zweefvliegtuig',emoji:'🛩️',en:'glider',zin:'Een <strong>zweefvliegtuig</strong> vliegt zonder motor. De wind helpt!'},
-  ]},
-  {thema:'💪 Eigenschappen', woorden:[
-    {woord:'nieuwsgierig',emoji:'🔍',en:'curious',zin:'Devvrat is heel <strong>nieuwsgierig</strong> — hij wil alles weten!'},
-    {woord:'geduldig',emoji:'⏳',en:'patient',zin:'Een goede visser is <strong>geduldig</strong>. Wachten, wachten, wachten...'},
-    {woord:'moedig',emoji:'🦁',en:'brave',zin:'Het is <strong>moedig</strong> om iets te doen als je bang bent.'},
-    {woord:'eerlijk',emoji:'✅',en:'honest',zin:'<strong>Eerlijk</strong> duurt het langst — altijd de waarheid zeggen!'},
-    {woord:'vriendelijk',emoji:'😊',en:'friendly',zin:'Als je <strong>vriendelijk</strong> bent, maken mensen graag vrienden met jou.'},
-  ]},
-  {thema:'🔭 Werkwoorden', woorden:[
-    {woord:'verzamelen',emoji:'📦',en:'to collect',zin:'Devvrat verzamelt voetbalplaatjes. Hij <strong>verzamelt</strong> ze in een boek.'},
-    {woord:'ontdekken',emoji:'🔭',en:'to discover',zin:'Wetenschappers <strong>ontdekken</strong> elke dag nieuwe dingen.'},
-    {woord:'vergelijken',emoji:'⚖️',en:'to compare',zin:'We <strong>vergelijken</strong> twee getallen: welke is groter?'},
-    {woord:'beschrijven',emoji:'✏️',en:'to describe',zin:'Kun jij een olifant <strong>beschrijven</strong> zonder het woord te zeggen?'},
-    {woord:'berekenen',emoji:'🔢',en:'to calculate',zin:'Met rekenen kun je veel dingen <strong>berekenen</strong>. Net als een computer!'},
-  ]},
-  {thema:'🌷 Nederland', woorden:[
-    {woord:'tulp',emoji:'🌷',en:'tulip',zin:'De <strong>tulp</strong> is de nationale bloem van Nederland. Miljoenen worden verkocht!'},
-    {woord:'windmolen',emoji:'🌀',en:'windmill',zin:'Een <strong>windmolen</strong> maakt stroom van wind. Duurzame energie!'},
-    {woord:'stroopwafel',emoji:'🍪',en:'stroopwafel',zin:'Een <strong>stroopwafel</strong> op een warme thee is het lekkerste ter wereld!'},
-    {woord:'dijk',emoji:'🌊',en:'dike',zin:'Een <strong>dijk</strong> beschermt Nederland tegen het water van de zee.'},
-    {woord:'polder',emoji:'🌾',en:'polder',zin:'Een <strong>polder</strong> is land dat gewonnen is van het water. Slim bedacht!'},
-  ]},
-  {thema:'🚀 Ruimte', woorden:[
-    {woord:'planeet',emoji:'🪐',en:'planet',zin:'De aarde is een <strong>planeet</strong>. Er zijn acht planeten in ons zonnestelsel!'},
-    {woord:'melkweg',emoji:'🌌',en:'galaxy/Milky Way',zin:'De <strong>melkweg</strong> is onze sterrenstelsels. Miljarden sterren!'},
-    {woord:'astronaut',emoji:'👨‍🚀',en:'astronaut',zin:'Een <strong>astronaut</strong> reist naar de ruimte. Eten uit tubes!'},
-    {woord:'telescoop',emoji:'🔭',en:'telescope',zin:'Met een <strong>telescoop</strong> kun je ver weg kijken, zelfs naar planeten!'},
-    {woord:'meteoor',emoji:'☄️',en:'meteor',zin:'Een <strong>meteoor</strong> is een steen die door de ruimte vliegt. Snel!'},
-  ]},
-  {thema:'🧠 Slim & School', woorden:[
-    {woord:'woordenboek',emoji:'📚',en:'dictionary',zin:'In een <strong>woordenboek</strong> staan alle woorden uitgelegd. Handig!'},
-    {woord:'liniaal',emoji:'📏',en:'ruler',zin:'Met een <strong>liniaal</strong> teken je een rechte lijn. Zonder wiebelen!'},
-    {woord:'agenda',emoji:'📅',en:'diary/planner',zin:'In je <strong>agenda</strong> schrijf je op wat je moet doen. Vergeet niets!'},
-    {woord:'experiment',emoji:'🧪',en:'experiment',zin:'Een <strong>experiment</strong> is een proef om iets te ontdekken. Wetenschap!'},
-    {woord:'bibliotheek',emoji:'📖',en:'library',zin:'In de <strong>bibliotheek</strong> kun je gratis boeken lenen. Duizenden boeken!'},
-  ]},
-];
+// ── STORAGE ─────────────────────────────────────────────
+function pKey(u){ return 'slimbo_' + u.name; }
+function loadProgress(u){
+  const raw = localStorage.getItem(pKey(u));
+  const d = raw ? JSON.parse(raw) : {};
+  return {
+    stars:        d.stars        || {},
+    streak:       d.streak       || 1,
+    totalStars:   d.totalStars   || 0,
+    todayDone:    d.todayDone    || [],
+    lastDate:     d.lastDate     || '',
+    sessions:     d.sessions     || [],
+    dailyTime:    d.dailyTime    || {},
+    todayMins:    d.todayMins    || 0,
+    lastDate2:    d.lastDate2    || '',
+    minGoal:      d.minGoal      || 120,
+    tafelsMastered: d.tafelsMastered || [],
+    flags:        d.flags        || {},
+  };
+}
+function saveProgress(){ if(currentUser) localStorage.setItem(pKey(currentUser), JSON.stringify(progress)); }
 
-// D/T SPELLING — 20 oefeningen
-const DT_OEFENINGEN = [
-  {zin:'De kat ___ op de bank.',         opties:['slaapt','slaapd'],   goed:'slaapt',  uitleg:'<strong>slapen</strong> → stam = <strong>slaap</strong> → slaap + t = <strong>slaapt</strong> ✓',  grappig:'De kat slaapt altijd. 24/7!'},
-  {zin:'Devvrat ___ snel naar school.',   opties:['rent','rend'],       goed:'rent',    uitleg:'<strong>rennen</strong> → stam = <strong>ren</strong> → ren + t = <strong>rent</strong> ✓',          grappig:'Haha, rent hij echt? Of loopt hij?'},
-  {zin:'De leraar ___ de opdracht uit.',  opties:['legt','legd'],       goed:'legt',    uitleg:'<strong>leggen</strong> → stam = <strong>leg</strong> → leg + t = <strong>legt</strong> ✓',           grappig:'De leraar legt uit... en jij luistert (hopelijk)!'},
-  {zin:'Het vliegtuig ___ op Schiphol.',  opties:['landt','landd'],     goed:'landt',   uitleg:'<strong>landen</strong> → stam = <strong>land</strong> → land + t = <strong>landt</strong> ✓',        grappig:'Gelukkig maar, anders zou het een ramp zijn!'},
-  {zin:'Mijn zusje ___ elke dag.',        opties:['tekent','tekend'],   goed:'tekent',  uitleg:'<strong>tekenen</strong> → stam = <strong>teken</strong> → teken + t = <strong>tekent</strong> ✓',    grappig:'Tekent ze ook raketten? Handig!'},
-  {zin:'Hij ___ een boek over dinosauriërs.',opties:['leest','leesd'], goed:'leest',   uitleg:'<strong>lezen</strong> → stam = <strong>lees</strong> → lees + t = <strong>leest</strong> ✓',          grappig:'Dino\'s zijn cool! Net zo cool als jij!'},
-  {zin:'De hond ___ zijn staart.',        opties:['kwispelt','kwispeld'],goed:'kwispelt',uitleg:'<strong>kwispelen</strong> → stam = <strong>kwispel</strong> → kwispel + t = <strong>kwispelt</strong> ✓',grappig:'Blije hond = kwispelende hond!'},
-  {zin:'Papa ___ de auto.',               opties:['wast','wasd'],       goed:'wast',    uitleg:'<strong>wassen</strong> → stam = <strong>was</strong> → was + t = <strong>wast</strong> ✓',           grappig:'Wie wast jullie auto? Jij?'},
-  {zin:'Ze ___ haar fiets elke dag.',     opties:['gebruikt','gebruikd'],goed:'gebruikt',uitleg:'<strong>gebruiken</strong> → stam = <strong>gebruik</strong> → gebruik + t = <strong>gebruikt</strong> ✓',grappig:'Fiets is de beste uitvinding van Nederland!'},
-  {zin:'De vogel ___ heel hoog.',         opties:['vliegt','vliegdt'],  goed:'vliegt',  uitleg:'<strong>vliegen</strong> → stam = <strong>vlieg</strong> → vlieg + t = <strong>vliegt</strong> ✓',     grappig:'Zou jij ook willen vliegen?'},
-  {zin:'Ik ___ elke dag mijn tanden.',    opties:['poets','poetst'],    goed:'poets',   uitleg:'Met <strong>ik</strong> gebruik je altijd de <strong>stam</strong> zonder t — dus: ik <strong>poets</strong> ✓',grappig:'Goed zo! Anders wordt de tandarts blij!'},
-  {zin:'Hij ___ heel goed voetbal.',      opties:['speelt','speeld'],   goed:'speelt',  uitleg:'<strong>spelen</strong> → stam = <strong>speel</strong> → speel + t = <strong>speelt</strong> ✓',      grappig:'Net zo goed als Erling Haaland? 🔥'},
-  {zin:'Mama ___ elke ochtend.',          opties:['werkt','werkd'],     goed:'werkt',   uitleg:'<strong>werken</strong> → stam = <strong>werk</strong> → werk + t = <strong>werkt</strong> ✓',         grappig:'Hard werken = lekker uitrusten!'},
-  {zin:'De kok ___ een lekkere soep.',    opties:['maakt','maakd'],     goed:'maakt',   uitleg:'<strong>maken</strong> → stam = <strong>maak</strong> → maak + t = <strong>maakt</strong> ✓',         grappig:'Soep, of ook pizza?'},
-  {zin:'Hij ___ heel hard.',              opties:['lacht','lachet'],    goed:'lacht',   uitleg:'<strong>lachen</strong> → stam = <strong>lach</strong> → lach + t = <strong>lacht</strong> ✓',          grappig:'Net als wanneer hij dit leest!'},
-  {zin:'Jij ___ altijd op tijd.',         opties:['komt','komdt'],      goed:'komt',    uitleg:'<strong>komen</strong> → stam = <strong>kom</strong> → kom + t = <strong>komt</strong> ✓',             grappig:'Jij? Op tijd? Altijd? Wauw!'},
-  {zin:'Het meisje ___ haar jas aan.',    opties:['doet','doed'],       goed:'doet',    uitleg:'<strong>doen</strong> → bijzonder werkwoord: hij/zij <strong>doet</strong> ✓',                         grappig:'Jas aan = klaar voor het avontuur!'},
-  {zin:'De baby ___ heel veel.',          opties:['huilt','huilde'],    goed:'huilt',   uitleg:'<strong>huilen</strong> → stam = <strong>huil</strong> → huil + t = <strong>huilt</strong> ✓',          grappig:'Babies huilen als ze honger hebben. Of gewoon zomaar!'},
-  {zin:'Hij ___ op zijn fiets.',          opties:['rijdt','rijdd'],     goed:'rijdt',   uitleg:'<strong>rijden</strong> → stam = <strong>rijd</strong> → rijd + t = <strong>rijdt</strong> ✓',          grappig:'Geen helm op = geen fiets op!'},
-  {zin:'Ze ___ haar huiswerk.',           opties:['maakt','maakd'],     goed:'maakt',   uitleg:'<strong>maken</strong> → stam = <strong>maak</strong> → maak + t = <strong>maakt</strong> ✓',         grappig:'Huiswerk maken = morgen blij zijn!'},
-];
+const MSG_KEY = 'slimbo_msgs';
+function getMsgs(){ return JSON.parse(localStorage.getItem(MSG_KEY)||'[]'); }
+function saveMsgs(m){ localStorage.setItem(MSG_KEY, JSON.stringify(m)); }
 
-// DELEN — 20 sommen
-const DELEN_SOMMEN = [
-  {som:'6 ÷ 2',  ant:3,  vis:'🍕🍕🍕🍕🍕🍕', groepen:2, woordsom:'Devvrat heeft 6 pizzapunten voor 2 vrienden. Hoeveel krijgt iedereen?', grappig:'Mmm pizza! 🍕'},
-  {som:'8 ÷ 4',  ant:2,  vis:'⚽⚽⚽⚽⚽⚽⚽⚽', groepen:4, woordsom:'8 voetballen voor 4 teams. Hoeveel ballen per team?', grappig:'Voetbal is cool! ⚽'},
-  {som:'10 ÷ 5', ant:2,  vis:'🍪🍪🍪🍪🍪🍪🍪🍪🍪🍪', groepen:5, woordsom:'10 koekjes voor 5 kinderen. Hoeveel koekjes per kind?', grappig:'Koekjes! 🍪 De beste som!'},
-  {som:'12 ÷ 3', ant:4,  vis:'🎈🎈🎈🎈🎈🎈🎈🎈🎈🎈🎈🎈', groepen:3, woordsom:'12 ballonnen voor 3 verjaardagen. Hoeveel ballonnen per feest?', grappig:'Feestje! 🎈'},
-  {som:'15 ÷ 5', ant:3,  vis:'⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐', groepen:5, woordsom:'15 sterren voor 5 groepen. Hoeveel sterren per groep?', grappig:'Jij verdient alle sterren! ⭐'},
-  {som:'16 ÷ 4', ant:4,  vis:'🍫🍫🍫🍫🍫🍫🍫🍫🍫🍫🍫🍫🍫🍫🍫🍫', groepen:4, woordsom:'16 stukjes chocolade voor 4 kinderen. Hoeveel per kind?', grappig:'Chocolade is altijd een goed idee! 🍫'},
-  {som:'18 ÷ 6', ant:3,  vis:'🥕🥕🥕🥕🥕🥕🥕🥕🥕🥕🥕🥕🥕🥕🥕🥕🥕🥕', groepen:6, woordsom:'18 wortels voor 6 konijnen. Hoeveel per konijn?', grappig:'Arme konijnen, maar goed voor hun ogen! 🐇'},
-  {som:'20 ÷ 4', ant:5,  vis:'🌟', groepen:4, woordsom:'20 stickers voor 4 vrienden. Hoeveel stickers per vriend?', grappig:'Stickers zijn altijd cool! 🌟'},
-  {som:'24 ÷ 6', ant:4,  vis:'🍬', groepen:6, woordsom:'24 snoepjes in 6 zakjes. Hoeveel per zakje?', grappig:'Snoep eten met mate! 🍬'},
-  {som:'30 ÷ 5', ant:6,  vis:'🚗', groepen:5, woordsom:'30 auto\'s in 5 rijen. Hoeveel auto\'s per rij?', grappig:'Veel files in Nederland! 🚗'},
-  {som:'9 ÷ 3',  ant:3,  vis:'🦁', groepen:3, woordsom:'9 leeuwen in 3 kooien. Hoeveel leeuwen per kooi?', grappig:'Pas op voor de leeuwen! 🦁'},
-  {som:'14 ÷ 2', ant:7,  vis:'🎮', groepen:2, woordsom:'14 spellen voor 2 kinderen. Hoeveel spellen per kind?', grappig:'7 spellen? Dat is een weekend vol! 🎮'},
-  {som:'21 ÷ 3', ant:7,  vis:'🌈', groepen:3, woordsom:'21 kleuren voor 3 tekeningen. Hoeveel kleuren per tekening?', grappig:'Kleur maar flink! 🌈'},
-  {som:'25 ÷ 5', ant:5,  vis:'🐟', groepen:5, woordsom:'25 vissen in 5 aquaria. Hoeveel vissen per aquarium?', grappig:'Vis kijken is zen! 🐟'},
-  {som:'28 ÷ 4', ant:7,  vis:'🍩', groepen:4, woordsom:'28 donuts voor 4 klassen. Hoeveel per klas?', grappig:'7 donuts per klas! Feest! 🍩'},
-  {som:'40 ÷ 10',ant:4,  vis:'🏀', groepen:10, woordsom:'40 basketballen voor 10 teams. Hoeveel per team?', grappig:'Basketbal is top! 🏀'},
-  {som:'36 ÷ 6', ant:6,  vis:'🦋', groepen:6, woordsom:'36 vlinders in 6 groepen. Hoeveel per groep?', grappig:'Prachtige vlinders! 🦋'},
-  {som:'32 ÷ 4', ant:8,  vis:'🎲', groepen:4, woordsom:'32 dobbelstenen in 4 dozen. Hoeveel per doos?', grappig:'Spelletjes spelen! 🎲'},
-  {som:'45 ÷ 5', ant:9,  vis:'🚀', groepen:5, woordsom:'45 raketten voor 5 planeten. Hoeveel per planeet?', grappig:'Naar de ruimte! 🚀'},
-  {som:'60 ÷ 10',ant:6,  vis:'📚', groepen:10, woordsom:'60 boeken in 10 dozen. Hoeveel per doos?', grappig:'Lezen is super! 📚'},
-];
+// ── AUDIO ENGINE ─────────────────────────────────────────
+let _actx = null;
+let _muted = localStorage.getItem('slimbo_mute') === '1';
+function _ctx(){
+  if(!_actx) _actx = new (window.AudioContext || window.webkitAudioContext)();
+  return _actx;
+}
+function _tone(freq, dur, type='sine', vol=0.18, delay=0){
+  if(_muted) return;
+  try{
+    const c=_ctx(), o=c.createOscillator(), g=c.createGain();
+    o.connect(g); g.connect(c.destination);
+    o.type=type; o.frequency.value=freq;
+    const t=c.currentTime+delay;
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(vol,t+0.015);
+    g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    o.start(t); o.stop(t+dur+0.05);
+  }catch(e){}
+}
+// Musical chimes
+function sfxCorrect(){ _tone(523,.09); _tone(659,.09,undefined,undefined,.1); _tone(784,.18,undefined,undefined,.2); }
+function sfxWrong(){ _tone(320,.14,'triangle',.14); _tone(240,.22,'triangle',.1,.16); }
+function sfxFanfare(){ [523,659,784,1047,1319].forEach((f,i)=>_tone(f,.16,'sine',.16,i*.09)); }
+function sfxModStart(){ _tone(880,.06,'sine',.1); _tone(1047,.12,'sine',.12,.07); }
+function sfxTap(){ _tone(900,.04,'sine',.06); }
+function sfxStreak(){ [440,554,659,880].forEach((f,i)=>_tone(f,.12,'sine',.14,i*.07)); }
+function sfxWindChime(){
+  [1047,1319,1568,2093].forEach((f,i)=>_tone(f,.35,'sine',.08,i*.12));
+}
+function sfxAlarm(){
+  const melody=[523,659,784,659,523,659,784,1047];
+  melody.forEach((f,i)=>_tone(f,.15,'square',.12,i*.18));
+}
+function sfxTimerWarn(){ _tone(660,.2,'sine',.1); }
 
-// LEZEN — 5 verhalen
-const LEZEN_VERHALEN = [
-  {
-    titel:'De slimme robot 🤖',
-    tekst:`Tim heeft een robot gekocht bij de speelgoedwinkel. De robot heet Max. Max kan praten, dansen en tekenen. Tim vraagt: "Max, hoeveel is tien plus tien?" Max antwoordt: "Twintig!" Tim lacht.
+// ── TIME TRACKING ────────────────────────────────────────
+let sessionStartTs  = null;   // when student started this session
+let lastTickTs      = null;
+let continuousMins  = 0;      // minutes since last eye break
+let blinkShown      = false;
+let timerInterval   = null;
+let breakInterval   = null;
+let breakSecsLeft   = BREAK_DURATION;
+let alarmCountInterval = null;
+let appVisible      = true;
 
-De volgende dag vraagt Tim: "Max, waar is mijn rugzak?" Max rijdt door het huis en vindt de rugzak onder het bed. "Geweldig!" zegt Tim.
-
-Maar dan gaat Max kapot. Hij blijft herhalen: "Beep boop beep boop." Tim lacht zo hard dat zijn buik pijn doet. Zijn vader repareert Max. Nu werkt Max weer perfect — en zegt hij geen beep boop meer.`,
-    vragen:[
-      {vraag:'Hoe heet de robot van Tim?',opties:['Bleep','Max','Bob','Robo'],goed:1},
-      {vraag:'Wat kon de robot NIET doen?',opties:['praten','dansen','tekenen','koken'],goed:3},
-      {vraag:'Wat zei de kapotte robot steeds?',opties:['blabla','tring tring','beep boop','help help'],goed:2},
-    ]
-  },
-  {
-    titel:'Het grote voetbalwedstrijd ⚽',
-    tekst:`Het was zaterdag. De voetbalwedstrijd begon om twee uur. Devvrat speelde voor team Blauw. De tegenstander was team Rood.
-
-In de eerste helft was het 0-0. Iedereen was gespannen. Toen, in de tweede helft, schoot Devvrat de bal hard in de goal! 1-0! Zijn team juichte luid.
-
-Maar team Rood was niet tevreden. Ze schoten ook een goal: 1-1. De wedstrijd eindigde gelijk. Na de wedstrijd kregen alle spelers een stroopwafel. Devvrat at er drie. "Lekker verdiend!" zei zijn moeder.`,
-    vragen:[
-      {vraag:'Hoe laat begon de wedstrijd?',opties:['om één uur','om twee uur','om drie uur','om vier uur'],goed:1},
-      {vraag:'Wat at Devvrat na de wedstrijd?',opties:['pizza','appel','stroopwafel','koekje'],goed:2},
-      {vraag:'Hoe eindigde de wedstrijd?',opties:['2-0 voor Blauw','1-0 voor Rood','1-1 gelijk','3-2 voor Blauw'],goed:2},
-    ]
-  },
-  {
-    titel:'De kampeertrip 🏕️',
-    tekst:`Het gezin ging kamperen in het bos. Ze hadden een grote tent, een slaapzak en veel eten meegenomen. Papa sloeg de tent op. Dat duurde heel lang. Mama lachte.
-
-\'s Avonds maakten ze een kampvuur. Ze roosterden worst en marshmallows. Het was heerlijk! De kinderen zongen liedjes.
-
-Midden in de nacht hoorde Devvrat een geluid. "Wat is dat?!" fluisterde hij bang. Papa stak zijn hoofd uit de tent. Het was een egel! Klein en schattig. Devvrat sliep daarna als een roos.`,
-    vragen:[
-      {vraag:'Wat duurde heel lang?',opties:['het vuur maken','de tent opzetten','de marshmallows roosteren','het rijden'],goed:1},
-      {vraag:'Wat hoorde Devvrat midden in de nacht?',opties:['een beer','een vogel','een egel','een hond'],goed:2},
-      {vraag:'Wat roosterden ze boven het kampvuur?',opties:['pizza en chips','worst en marshmallows','brood en kaas','appels en peren'],goed:1},
-    ]
-  },
-  {
-    titel:'De uitvinder 💡',
-    tekst:`Lena was tien jaar en hield van uitvinden. Ze had al een machine gemaakt die automatisch de kat voedde. Ze had ook een apparaat gebouwd dat haar kamer opruimde — maar dat ging een beetje mis. Het ruimde ook haar favoriete speelgoed op!
-
-Op school won Lena de eerste prijs bij de wetenschapsfair. Ze had een waterfilter uitgevonden van zand en grind. "Hiermee kunnen mensen schoon water drinken!" legde ze uit.
-
-Haar leraar zei: "Lena, jij wordt later echt uitvinder." Lena glimlachte. Ze wist het al lang.`,
-    vragen:[
-      {vraag:'Hoe oud was Lena?',opties:['acht jaar','negen jaar','tien jaar','elf jaar'],goed:2},
-      {vraag:'Wat won Lena op school?',opties:['een voetbalwedstrijd','een spelquiz','de eerste prijs bij de wetenschapsfair','een tekenwedstrijd'],goed:2},
-      {vraag:'Wat ging er mis met haar opruimmachine?',opties:['hij ging kapot','hij ruimde ook haar speelgoed op','hij maakte lawaai','hij reed de kat omver'],goed:1},
-    ]
-  },
-  {
-    titel:'De geheimzinnige doos 📦',
-    tekst:`Op zijn verjaardag vond Sam een grote doos voor de deur. Er zat geen naam op. Alleen: "Voor de slimste jongen van de straat."
-
-Sam opende de doos voorzichtig. Erin zat een puzzel van 500 stukjes, een boek over ruimte, en een briefje: "Gefeliciteerd! Van een vriend die van lezen houdt."
-
-Sam wist direct wie het was: zijn buurman meneer De Vries. Die las altijd op zijn balkon. Sam rende naar hem toe en gaf hem een grote knuffel. Meneer De Vries lachte. "Slim ventje, jij!"`,
-    vragen:[
-      {vraag:'Wat zat er NIET in de doos?',opties:['een puzzel','een boek over ruimte','een briefje','snoep'],goed:3},
-      {vraag:'Hoeveel stukjes had de puzzel?',opties:['100','200','500','1000'],goed:2},
-      {vraag:'Wie had de doos voor de deur gezet?',opties:['zijn oma','zijn leraar','zijn vriend Tim','meneer De Vries'],goed:3},
-    ]
-  },
-];
-
-// ══════════════════════════════════════════════
-// SESSION & PROGRESS
-// ══════════════════════════════════════════════
-let currentUser = null;
-let progress = {};
-
-function getKey(u){ return 'slimbo_'+u.name; }
-function loadProgress(u){ const d=localStorage.getItem(getKey(u)); return d?JSON.parse(d):{stars:{},streaks:{},todayDone:[],lastDate:'',totalStars:0,streak:1,flags:{}}; }
-function saveProgress(){ if(currentUser)localStorage.setItem(getKey(currentUser),JSON.stringify(progress)); }
-
-// ── INIT ──
-window.addEventListener('load',()=>{
-  setTimeout(()=>{
-    document.getElementById('loadingScreen').classList.add('hidden');
-    document.getElementById('loginScreen').classList.remove('hidden');
-    document.getElementById('loginName').focus();
-  },1200);
+document.addEventListener('visibilitychange', ()=>{
+  appVisible = !document.hidden;
+  if(!appVisible && sessionStartTs){ pauseTimer(); }
+  else if(appVisible && currentUser?.role==='student'){ resumeTimer(); checkHourLock(); }
 });
 
-// ── LOGIN ──
-document.getElementById('loginPin').addEventListener('keydown',e=>{ if(e.key==='Enter')handleLogin(); });
-document.getElementById('loginName').addEventListener('keydown',e=>{ if(e.key==='Enter')document.getElementById('loginPin').focus(); });
-
-function handleLogin(){
-  const name=document.getElementById('loginName').value.trim().toLowerCase();
-  const pin=document.getElementById('loginPin').value.trim();
-  const acct=ACCOUNTS.find(a=>a.name===name&&a.pin===pin);
-  if(!acct){ document.getElementById('loginErr').textContent='Naam of PIN klopt niet. Probeer opnieuw! 🤔'; return; }
-  currentUser=acct;
-  progress=loadProgress(acct);
-  checkStreak();
-  document.getElementById('loginScreen').classList.add('hidden');
-  if(acct.role==='reviewer'){ showBram(); }
-  else { showHome(); }
+function startTimer(){
+  sessionStartTs = Date.now();
+  lastTickTs     = Date.now();
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(onTick, TICK_MS);
+}
+function pauseTimer(){
+  if(!sessionStartTs) return;
+  const elapsed = Math.floor((Date.now()-lastTickTs)/60000);
+  if(elapsed>0) addMins(elapsed);
+  lastTickTs = null;
+}
+function resumeTimer(){
+  lastTickTs = Date.now();
+}
+function stopTimer(){
+  pauseTimer();
+  if(timerInterval){ clearInterval(timerInterval); timerInterval=null; }
+  sessionStartTs = null;
+}
+function addMins(n){
+  if(n<=0) return;
+  progress.todayMins = (progress.todayMins||0) + n;
+  continuousMins     += n;
+  const today = new Date().toDateString();
+  progress.dailyTime = progress.dailyTime || {};
+  progress.dailyTime[today] = (progress.dailyTime[today]||0) + n;
+  saveProgress();
+  updateTimeDisplay();
+  checkEyeBreak();
+  checkBlinkReminder();
+}
+function onTick(){
+  if(!appVisible || !lastTickTs) return;
+  const now = Date.now();
+  const elapsed = Math.floor((now - lastTickTs) / 60000);
+  if(elapsed > 0){
+    addMins(elapsed);
+    lastTickTs = now;
+  }
+  checkHourLock();
+  checkAlarmLogic();
 }
 
+function updateTimeDisplay(){
+  if(!currentUser || currentUser.role!=='student') return;
+  const mins = progress.todayMins || 0;
+  const goal = progress.minGoal || 120;
+  const pct  = Math.min(1, mins / goal);
+  const offset = 326.73 * (1 - pct);
+  const ringEl = document.getElementById('ringFill');
+  if(ringEl){
+    ringEl.setAttribute('stroke-dashoffset', offset.toFixed(2));
+    ringEl.setAttribute('stroke', pct>=1 ? '#FFCF50' : 'url(#ringGrad)');
+  }
+  const minsEl = document.getElementById('ringMins');
+  if(minsEl) minsEl.textContent = mins;
+  const goalEl = document.getElementById('heroGoal');
+  if(goalEl){
+    if(mins >= goal){
+      goalEl.textContent = '🏆 Doel bereikt! +' + (mins-goal) + ' min extra!';
+      goalEl.className = 'hero-goal done';
+    } else {
+      goalEl.textContent = 'Doel: nog ' + (goal-mins) + ' min 💪';
+      goalEl.className = 'hero-goal';
+    }
+  }
+  // warm tint
+  const shell = document.getElementById('appShell');
+  shell.classList.remove('warm1','warm2');
+  if(continuousMins >= 40) shell.classList.add('warm2');
+  else if(continuousMins >= 30) shell.classList.add('warm1');
+}
+
+// ── EYE BREAK ────────────────────────────────────────────
+function checkEyeBreak(){
+  if(continuousMins >= BREAK_AFTER_MINS && document.getElementById('breakOverlay').classList.contains('hidden')){
+    triggerBreak();
+  }
+}
+function triggerBreak(){
+  sfxWindChime();
+  document.getElementById('breakMinsUsed').textContent = continuousMins;
+  document.getElementById('breakOverlay').classList.remove('hidden');
+  breakSecsLeft = BREAK_DURATION;
+  updateBreakTimer();
+  breakInterval = setInterval(()=>{
+    breakSecsLeft--;
+    updateBreakTimer();
+    if(breakSecsLeft<=0) endBreak();
+  }, 1000);
+}
+function updateBreakTimer(){
+  const m = Math.floor(breakSecsLeft/60);
+  const s = breakSecsLeft % 60;
+  document.getElementById('breakTimer').textContent = m + ':' + String(s).padStart(2,'0');
+}
+function endBreak(){
+  if(breakInterval){ clearInterval(breakInterval); breakInterval=null; }
+  document.getElementById('breakOverlay').classList.add('hidden');
+  continuousMins = 0;
+  sfxModStart();
+}
+function requestSkipBreak(){
+  sfxTap();
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinErr').textContent = '';
+  document.getElementById('pinOverlay').classList.remove('hidden');
+}
+function checkSkipPin(){
+  const val = document.getElementById('pinInput').value.trim();
+  if(val === SKIP_PIN){
+    document.getElementById('pinOverlay').classList.add('hidden');
+    endBreak();
+  } else {
+    document.getElementById('pinErr').textContent = 'Verkeerde PIN. Probeer opnieuw.';
+    sfxWrong();
+  }
+}
+function cancelPin(){
+  document.getElementById('pinOverlay').classList.add('hidden');
+}
+
+// ── BLINK REMINDER ───────────────────────────────────────
+function checkBlinkReminder(){
+  const eye = document.getElementById('blinkEye');
+  if(!eye) return;
+  if(continuousMins > 0 && continuousMins % BLINK_INTERVAL === 0){
+    eye.classList.add('show');
+    setTimeout(()=>eye.classList.remove('show'), 6000);
+  }
+}
+
+// ── HOUR LOCK ────────────────────────────────────────────
+function checkHourLock(){
+  if(!currentUser || currentUser.role !== 'student') return;
+  const h = new Date().getHours();
+  const locked = h < HOUR_START || h >= HOUR_END;
+  const overlay = document.getElementById('lockedOverlay');
+  if(locked){
+    const now = new Date();
+    document.getElementById('lockedTime').textContent =
+      String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    overlay.classList.remove('hidden');
+  } else {
+    overlay.classList.add('hidden');
+  }
+}
+
+// ── ALARM LOGIC ──────────────────────────────────────────
+let _lastAlarmHour = -1;
+function checkAlarmLogic(){
+  if(!currentUser || currentUser.role!=='student') return;
+  const h    = new Date().getHours();
+  const mins = progress.todayMins || 0;
+  const goal = progress.minGoal   || 120;
+  if(h === _lastAlarmHour) return;
+
+  if(h===7 && mins<5){
+    showAlarm('Goedemorgen Devvrat! 🌅','Tijd voor Slimbo! Laten we beginnen! 🚀',true);
+    _lastAlarmHour = h;
+  } else if(h===15 && mins < goal*0.5){
+    showAlarm('Hey Devvrat! ⚡','Je bent al ' + mins + ' min bezig. Nog ' + (goal-mins) + ' min te gaan!',false);
+    _lastAlarmHour = h;
+  } else if(h===20 && mins < goal){
+    showAlarm('Laatste kans! ⏰','Nog ' + (goal-mins) + ' minuten te gaan voor vandaag!',false);
+    _lastAlarmHour = h;
+  } else if(h===22 && mins < goal){
+    showAlarm('Slimbo sluit om 23:00! 🚨','Snel! Nog ' + Math.max(0,goal-mins) + ' min te leren!',false);
+    _lastAlarmHour = h;
+  }
+}
+function showAlarm(title, sub, countdown){
+  sfxAlarm();
+  document.getElementById('alarmTitle').textContent = title;
+  document.getElementById('alarmSub').textContent   = sub;
+  const cntEl = document.getElementById('alarmCountdown');
+  document.getElementById('alarmOverlay').classList.remove('hidden');
+  if(countdown){
+    let n = 10; cntEl.textContent = n;
+    alarmCountInterval = setInterval(()=>{
+      n--;
+      cntEl.textContent = n;
+      if(n<=0){ clearInterval(alarmCountInterval); dismissAlarm(); }
+    }, 1000);
+  } else { cntEl.textContent = ''; }
+}
+function dismissAlarm(){
+  if(alarmCountInterval){ clearInterval(alarmCountInterval); alarmCountInterval=null; }
+  document.getElementById('alarmOverlay').classList.add('hidden');
+  sfxTap();
+}
+
+// ── WEB NOTIFICATIONS ─────────────────────────────────────
+function requestNotifPerm(){
+  if('Notification' in window && Notification.permission==='default'){
+    Notification.requestPermission();
+  }
+}
+function sendNotif(title, body){
+  if('Notification' in window && Notification.permission==='granted'){
+    new Notification(title, {body, icon:'/icon.svg'});
+  }
+}
+
+// ── STREAK CHECK ──────────────────────────────────────────
 function checkStreak(){
-  const today=new Date().toDateString();
-  if(progress.lastDate!==today){
-    const yesterday=new Date(Date.now()-86400000).toDateString();
-    if(progress.lastDate===yesterday){ progress.streak=(progress.streak||1)+1; }
-    else if(progress.lastDate){ progress.streak=1; }
-    progress.todayDone=[];
-    progress.lastDate=today;
+  const today = new Date().toDateString();
+  if(progress.lastDate !== today){
+    const yesterday = new Date(Date.now()-86400000).toDateString();
+    if(progress.lastDate === yesterday) progress.streak = (progress.streak||1)+1;
+    else if(progress.lastDate) progress.streak = 1;
+    progress.todayDone = [];
+    progress.todayMins = 0;
+    progress.lastDate  = today;
     saveProgress();
   }
 }
 
-function logout(){
-  currentUser=null; progress={};
+// ── SCREENS ──────────────────────────────────────────────
+function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
-  document.getElementById('loginScreen').classList.remove('hidden');
-  document.getElementById('loginPin').value='';
+  document.getElementById(id).classList.remove('hidden');
+}
+
+// ── LOGIN ─────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', ()=>{
+  setTimeout(()=>{ showScreen('loginScreen'); document.getElementById('li_name').focus(); }, 1200);
+});
+document.addEventListener('keydown', e=>{
+  if(e.key==='Enter'){
+    const focused = document.activeElement?.id;
+    if(focused==='li_name') document.getElementById('li_pin').focus();
+    else if(focused==='li_pin') handleLogin();
+    else if(focused==='pinInput') checkSkipPin();
+  }
+});
+function handleLogin(){
+  const name = document.getElementById('li_name').value.trim().toLowerCase();
+  const pin  = document.getElementById('li_pin').value.trim();
+  const acct = ACCOUNTS.find(a=>a.name===name && a.pin===pin);
+  if(!acct){ document.getElementById('loginErr').textContent='Naam of PIN klopt niet. Probeer opnieuw! 🤔'; sfxWrong(); return; }
+  currentUser = acct;
+  progress    = loadProgress(acct);
   document.getElementById('loginErr').textContent='';
+  sfxTap();
+  if(acct.role==='reviewer') { showScreen('bramScreen'); renderBram(); return; }
+  if(acct.role==='parent')   { showScreen('sandyScreen'); renderSandy(); return; }
+  // student
+  checkStreak();
+  requestNotifPerm();
+  checkHourLock();
+  showHome();
+  startTimer();
+}
+function logout(){
+  stopTimer();
+  currentUser=null; progress={};
+  document.getElementById('li_pin').value='';
+  document.getElementById('li_name').value='';
+  document.getElementById('loginErr').textContent='';
+  // hide all overlays
+  ['breakOverlay','alarmOverlay','lockedOverlay','pinOverlay'].forEach(id=>
+    document.getElementById(id).classList.add('hidden'));
+  showScreen('loginScreen');
 }
 
-// ── HOME ──
+// ── HOME ──────────────────────────────────────────────────
 function showHome(){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
-  document.getElementById('homeScreen').classList.remove('hidden');
-  const hr=new Date().getHours();
-  const greet=hr<6?'Goedenacht 🌙':hr<12?'Goedemorgen ☀️':hr<17?'Goedemiddag 😎':'Goedenavond 🌆';
-  document.getElementById('heroGreeting').textContent=greet;
-  document.getElementById('heroName').textContent=currentUser.displayName+'!';
-  document.getElementById('streakChip').textContent='🔥 '+( progress.streak||1);
-  document.getElementById('streakNum').textContent=(progress.streak||1)+' dagen';
-  document.getElementById('totalStars').textContent='⭐ '+(progress.totalStars||0);
-  const done=(progress.todayDone||[]).length;
-  document.getElementById('todayDone').textContent=done+' / 4';
-  document.getElementById('heroSub').textContent=done===4?'Alle modules klaar! 🏆 Top! 🎉':(done===0?'Wat ga je vandaag leren? 🎯':'Goed bezig! '+done+'/4 klaar! 💪');
-  updateModuleCards();
-  updateDailyMsg();
-}
+  showScreen('homeScreen');
+  updateTimeDisplay();
+  const hr   = new Date().getHours();
+  const greet = hr<6?'Goedenacht 🌙':hr<12?'Goedemorgen ☀️':hr<17?'Goedemiddag 😎':'Goedenavond 🌆';
+  document.getElementById('heroGreeting').textContent = greet;
+  document.getElementById('heroName').textContent     = currentUser.displayName + '!';
+  document.getElementById('streakChip').textContent   = '🔥 ' + (progress.streak||1);
+  document.getElementById('statStars').textContent    = '⭐ ' + (progress.totalStars||0);
+  document.getElementById('statStreak').textContent   = '🔥 ' + (progress.streak||1);
 
-function updateModuleCards(){
-  const mods=['woorden','spelling','delen','lezen'];
-  mods.forEach(m=>{
-    const s=progress.stars&&progress.stars[m]||0;
-    const done=(progress.todayDone||[]).includes(m);
-    const starsEl=document.getElementById('stars-'+m);
-    const badgeEl=document.getElementById('badge-'+m);
-    if(starsEl) starsEl.innerHTML=[1,2,3].map(i=>`<span class="module-star">${i<=s?'⭐':'☆'}</span>`).join('');
-    if(badgeEl) badgeEl.textContent=done?'✅':'';
+  const done = (progress.todayDone||[]).length;
+  document.getElementById('statDone').textContent = done + '/6';
+  document.getElementById('heroSub').textContent  = done===6 ? 'Alle modules klaar! 🏆' : done===0 ? 'Wat ga je vandaag leren? 🎯' : 'Goed bezig! ' + done + '/6 klaar! 💪';
+
+  // module star badges
+  ['woorden','spelling','delen','lezen','tafels','rekenen'].forEach(m=>{
+    const s = progress.stars?.[m] || 0;
+    const done2 = (progress.todayDone||[]).includes(m);
+    document.getElementById('mst-'+m).textContent = [1,2,3].map(i=>i<=s?'⭐':'☆').join('');
+    document.getElementById('mbg-'+m).textContent = done2 ? '✅' : '';
   });
-}
 
-function updateDailyMsg(){
-  const done=(progress.todayDone||[]).length;
-  const msgs=[
+  // tip rotation
+  const tips = [
     '<strong>💡 Tip:</strong> Elk woord dat je leert is een superkracht! 🧠',
-    '<strong>🔥 Goed bezig!</strong> Al '+done+' modules gedaan! Ga zo door!',
-    '<strong>⭐ Bijna klaar!</strong> Nog '+(4-done)+' module(s) te gaan!',
-    '<strong>🏆 Geweldig!</strong> Alle modules vandaag klaar! Jij bent een ster!',
+    '<strong>🔥 Oefen elke dag!</strong> Dan wordt het steeds makkelijker! 💪',
+    '<strong>⭐ Wist je dit?</strong> Jij zit in groep 5 volgend jaar — je bent al bijna klaar!',
+    '<strong>🎯 Focus!</strong> 20 minuten goed oefenen is beter dan 1 uur halfbakken!',
   ];
-  document.getElementById('dailyMsg').innerHTML=msgs[Math.min(done,3)];
+  document.getElementById('dailyTip').innerHTML = tips[new Date().getDay() % tips.length];
+
+  // messages from Sandy
+  renderMsgBanners();
+  checkHourLock();
 }
 
-// ══════════════════════════════════════════════
-// MODULE ENGINE
-// ══════════════════════════════════════════════
-let currentModule='', moduleQuestions=[], moduleIdx=0, moduleCorrect=0, moduleAnswered=false;
-
-function startModule(mod){
-  currentModule=mod;
-  moduleIdx=0; moduleCorrect=0; moduleAnswered=false;
-  document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
-  document.getElementById('exerciseScreen').classList.remove('hidden');
-  const titles={woorden:'📚 Woordenschat',spelling:'✏️ Spelling d/t',delen:'➗ Delen',lezen:'📖 Begrijpend Lezen'};
-  document.getElementById('exTitle').textContent=titles[mod];
-  buildQuestions(mod);
-  renderQuestion();
+function renderMsgBanners(){
+  const wrap = document.getElementById('msgBanners');
+  if(!wrap) return;
+  const msgs = getMsgs().filter(m=>!m.seen);
+  if(!msgs.length){ wrap.innerHTML=''; return; }
+  wrap.innerHTML = msgs.slice(-2).map(m=>`
+    <div class="msg-banner" id="msg_${m.id}">
+      <span style="font-size:22px">💛</span>
+      <div class="msg-banner-text"><span class="msg-sender">Sandy:</span> ${m.text}</div>
+      <button class="msg-dismiss" onclick="dismissMsg(${m.id})">×</button>
+    </div>`).join('');
 }
-
-function buildQuestions(mod){
-  if(mod==='woorden'){
-    // Pick a random set of 5 words and quiz them
-    const setIdx=Math.floor(Math.random()*WOORDEN_SETS.length);
-    const set=WOORDEN_SETS[setIdx];
-    moduleQuestions=set.woorden.map(w=>{
-      // Shuffle wrong answers from other sets
-      const allWords=WOORDEN_SETS.flatMap(s=>s.woorden.map(ww=>ww.woord)).filter(ww=>ww!==w.woord);
-      const wrong=shuffle(allWords).slice(0,3);
-      const opties=shuffle([w.woord,...wrong]);
-      return {type:'woord',data:w,opties,goed:w.woord};
-    });
-  } else if(mod==='spelling'){
-    moduleQuestions=shuffle(DT_OEFENINGEN).slice(0,7).map(o=>({type:'spelling',data:o}));
-  } else if(mod==='delen'){
-    moduleQuestions=shuffle(DELEN_SOMMEN).slice(0,7).map(d=>({type:'delen',data:d}));
-  } else if(mod==='lezen'){
-    const verhaal=LEZEN_VERHALEN[Math.floor(Math.random()*LEZEN_VERHALEN.length)];
-    // First question = read the text (auto-pass)
-    moduleQuestions=[
-      {type:'lezen_tekst',data:verhaal},
-      ...verhaal.vragen.map((v,i)=>({type:'lezen_vraag',data:v,verhaal}))
-    ];
-  }
-}
-
-function renderQuestion(){
-  const total=moduleQuestions.length;
-  const pct=Math.round((moduleIdx/total)*100);
-  document.getElementById('exProgressFill').style.width=pct+'%';
-  document.getElementById('exProgressLabel').textContent='Vraag '+(moduleIdx+1)+' van '+total;
-  document.getElementById('exProgressPct').textContent=pct+'%';
-  document.getElementById('exScore').textContent=moduleCorrect+'/'+moduleIdx;
-  moduleAnswered=false;
-
-  const q=moduleQuestions[moduleIdx];
-  const body=document.getElementById('exBody');
-
-  if(q.type==='woord') renderWoord(q,body);
-  else if(q.type==='spelling') renderSpelling(q,body);
-  else if(q.type==='delen') renderDelen(q,body);
-  else if(q.type==='lezen_tekst') renderLezenTekst(q,body);
-  else if(q.type==='lezen_vraag') renderLezenVraag(q,body);
-}
-
-// ── WOORD ──
-function renderWoord(q,body){
-  const w=q.data;
-  body.innerHTML=`
-    <div class="ex-card">
-      <div style="text-align:center;font-size:13px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Welk woord hoort bij de afbeelding?</div>
-      <div class="word-emoji">${w.emoji}</div>
-      <div class="word-sentence" id="wordSentence" style="display:none">${w.zin}</div>
-    </div>
-    <div class="ex-card">
-      <div style="font-size:14px;color:var(--text3);margin-bottom:10px;font-weight:600">Kies het juiste woord:</div>
-      <div class="options-grid" id="optGrid">
-        ${q.opties.map(o=>`<button class="option-btn" onclick="answerWoord('${o}','${q.goed}',this)">${o}</button>`).join('')}
-      </div>
-      <div class="feedback-box" id="feedbackBox"></div>
-      <button class="next-btn hidden" id="nextBtn" onclick="nextQuestion()">Volgende →</button>
-    </div>`;
-}
-
-function answerWoord(chosen, goed, btn){
-  if(moduleAnswered)return;
-  moduleAnswered=true;
-  const correct=chosen===goed;
-  if(correct){moduleCorrect++; sfxCorrect();}else sfxWrong();
-  document.querySelectorAll('.option-btn').forEach(b=>b.disabled=true);
-  btn.classList.add(correct?'correct':'wrong');
-  if(!correct){
-    document.querySelectorAll('.option-btn').forEach(b=>{ if(b.textContent===goed)b.classList.add('reveal'); });
-  }
-  document.getElementById('wordSentence').style.display='block';
-  const fb=document.getElementById('feedbackBox');
-  fb.className='feedback-box show '+(correct?'good':'bad');
-  fb.textContent=correct?'⭐ Super! Jij weet het!':'❌ Helaas! Het goede woord is: '+goed;
-  document.getElementById('nextBtn').classList.remove('hidden');
-}
-
-// ── SPELLING ──
-function renderSpelling(q,body){
-  const d=q.data;
-  body.innerHTML=`
-    <div class="ex-card">
-      <div style="text-align:center;font-size:13px;color:var(--purple);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">D of T? Vul in!</div>
-      <div class="dt-sentence">${d.zin.replace('___','<span class="dt-blank">___</span>')}</div>
-    </div>
-    <div class="ex-card">
-      <div class="dt-options">
-        ${d.opties.map(o=>`<button class="dt-btn" onclick="answerSpelling('${o}','${d.goed}',this)">${o}</button>`).join('')}
-      </div>
-      <div class="feedback-box" id="feedbackBox"></div>
-      <div class="dt-rule hidden" id="dtRule"></div>
-      <button class="next-btn hidden" id="nextBtn" onclick="nextQuestion()">Volgende →</button>
-    </div>`;
-}
-
-function answerSpelling(chosen,goed,btn){
-  if(moduleAnswered)return;
-  moduleAnswered=true;
-  const correct=chosen===goed;
-  if(correct){moduleCorrect++; sfxCorrect();}else sfxWrong();
-  document.querySelectorAll('.dt-btn').forEach(b=>b.disabled=true);
-  btn.classList.add(correct?'correct':'wrong');
-  if(!correct) document.querySelectorAll('.dt-btn').forEach(b=>{ if(b.textContent===goed)b.classList.add('correct'); });
-  const q=moduleQuestions[moduleIdx];
-  const fb=document.getElementById('feedbackBox');
-  fb.className='feedback-box show '+(correct?'good':'bad');
-  fb.innerHTML=(correct?'⭐ Goed zo! ':'❌ Helaas! ')+`<div class="feedback-funny">${q.data.grappig}</div>`;
-  const rule=document.getElementById('dtRule');
-  rule.innerHTML='📖 Regel: '+q.data.uitleg;
-  rule.classList.remove('hidden');
-  document.getElementById('nextBtn').classList.remove('hidden');
-}
-
-// ── DELEN ──
-function renderDelen(q,body){
-  const d=q.data;
-  // Generate answer options (correct + 3 wrong)
-  const correctAnt=d.ant;
-  const wrongs=[];
-  while(wrongs.length<3){
-    const w=correctAnt+Math.floor(Math.random()*5)-2;
-    if(w>0&&w!==correctAnt&&!wrongs.includes(w))wrongs.push(w);
-  }
-  const opties=shuffle([correctAnt,...wrongs]);
-  q.opties=opties;
-  q.goed=correctAnt;
-
-  body.innerHTML=`
-    <div class="ex-card" style="border-color:rgba(56,189,248,.4)">
-      <div style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Bereken de som!</div>
-      <div class="delen-sum">${d.som} = ?</div>
-      <div class="delen-word">${d.woordsom}</div>
-      <div class="delen-visual">${d.vis.repeat?d.vis.repeat(d.ant):d.vis}</div>
-    </div>
-    <div class="ex-card">
-      <div class="number-grid">
-        ${opties.map(o=>`<button class="number-btn" onclick="answerDelen(${o},${correctAnt},this)">${o}</button>`).join('')}
-      </div>
-      <div class="feedback-box" id="feedbackBox"></div>
-      <button class="next-btn hidden" id="nextBtn" onclick="nextQuestion()">Volgende →</button>
-    </div>`;
-}
-
-function answerDelen(chosen,goed,btn){
-  if(moduleAnswered)return;
-  moduleAnswered=true;
-  const correct=chosen===goed;
-  if(correct){moduleCorrect++; sfxCorrect();}else sfxWrong();
-  document.querySelectorAll('.number-btn').forEach(b=>b.disabled=true);
-  btn.classList.add(correct?'correct':'wrong');
-  if(!correct) document.querySelectorAll('.number-btn').forEach(b=>{ if(+b.textContent===goed)b.classList.add('correct'); });
-  const d=moduleQuestions[moduleIdx].data;
-  const fb=document.getElementById('feedbackBox');
-  fb.className='feedback-box show '+(correct?'good':'bad');
-  fb.innerHTML=(correct?'⭐ Juist! ':'❌ Helaas! Het antwoord is '+goed+'! ')+`<div class="feedback-funny">${d.grappig}</div>`;
-  document.getElementById('nextBtn').classList.remove('hidden');
-}
-
-// ── LEZEN TEKST ──
-function renderLezenTekst(q,body){
-  const v=q.data;
-  body.innerHTML=`
-    <div class="ex-card" style="border-color:rgba(6,214,160,.4)">
-      <div class="lezen-title">${v.titel}</div>
-      <div class="lezen-text">${v.tekst.replace(/\n\n/g,'<br><br>')}</div>
-    </div>
-    <button class="next-btn" onclick="nextQuestion()">Vragen beantwoorden →</button>`;
-}
-
-// ── LEZEN VRAAG ──
-function renderLezenVraag(q,body){
-  const v=q.data;
-  body.innerHTML=`
-    <div class="ex-card" style="border-color:rgba(6,214,160,.4)">
-      <div style="font-size:12px;color:var(--green);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Begripsvraag</div>
-      <div class="lezen-q">${v.vraag}</div>
-      <div class="lezen-opts">
-        ${v.opties.map((o,i)=>`<button class="lezen-opt" onclick="answerLezen(${i},${v.goed},this)">${o}</button>`).join('')}
-      </div>
-      <div class="feedback-box" id="feedbackBox"></div>
-      <button class="next-btn hidden" id="nextBtn" onclick="nextQuestion()">Volgende →</button>
-    </div>`;
-}
-
-function answerLezen(chosen,goed,btn){
-  if(moduleAnswered)return;
-  moduleAnswered=true;
-  const correct=chosen===goed;
-  if(correct){moduleCorrect++; sfxCorrect();}else sfxWrong();
-  document.querySelectorAll('.lezen-opt').forEach(b=>b.disabled=true);
-  btn.classList.add(correct?'correct':'wrong');
-  if(!correct){
-    const v=moduleQuestions[moduleIdx].data;
-    document.querySelectorAll('.lezen-opt')[goed].classList.add('correct');
-    const fb=document.getElementById('feedbackBox');
-    fb.className='feedback-box show bad';
-    fb.textContent='❌ Helaas! Het juiste antwoord is: '+v.opties[goed];
-  } else {
-    const fb=document.getElementById('feedbackBox');
-    fb.className='feedback-box show good';
-    fb.textContent='⭐ Goed gelezen! Jij let goed op!';
-  }
-  document.getElementById('nextBtn').classList.remove('hidden');
-}
-
-// ── NEXT ──
-function nextQuestion(){
-  moduleIdx++;
-  if(moduleIdx>=moduleQuestions.length){ showCelebration(); return; }
-  renderQuestion();
+function dismissMsg(id){
+  const all = getMsgs();
+  const m   = all.find(x=>x.id===id);
+  if(m) m.seen = true;
+  saveMsgs(all);
+  const el = document.getElementById('msg_'+id);
+  if(el) el.remove();
+  sfxTap();
 }
 
 function goHome(){ showHome(); }
 
-// ── CELEBRATION ──
-function showCelebration(){
-  const total=moduleQuestions.filter(q=>q.type!=='lezen_tekst').length;
-  const stars=moduleCorrect>=total?3:moduleCorrect>=Math.ceil(total*0.6)?2:1;
-  progress.stars=progress.stars||{};
-  const prev=progress.stars[currentModule]||0;
-  if(stars>prev)progress.stars[currentModule]=stars;
-  progress.totalStars=(progress.totalStars||0)+(stars-prev);
-  if(!(progress.todayDone||[]).includes(currentModule)){
-    progress.todayDone=[...(progress.todayDone||[]),currentModule];
+// ── SERVICE WORKER ────────────────────────────────────────
+if('serviceWorker' in navigator)
+  window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+
+// ══════════════════════════════════════════════════════════
+//  PART 2 — Content data, modules, Sandy & Bram dashboards
+// ══════════════════════════════════════════════════════════
+
+// ── HELPERS ───────────────────────────────────────────────
+function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]; } return a; }
+function rnd(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+// ── CONTENT DATA ──────────────────────────────────────────
+const WOORDEN_SETS = [
+  {word:'bibliotheek', hint:'Je leent er boeken', emoji:'📚'},
+  {word:'vliegtuig',   hint:'Vliegt in de lucht', emoji:'✈️'},
+  {word:'paraplu',     hint:'Gebruik je als het regent', emoji:'☂️'},
+  {word:'giraffe',     hint:'Heeft een heel lange nek', emoji:'🦒'},
+  {word:'chocolade',   hint:'Lekker zoet snoep', emoji:'🍫'},
+  {word:'schildpad',   hint:'Draagt een huis op zijn rug', emoji:'🐢'},
+  {word:'pianospelen', hint:'Muziekinstrument bespelen', emoji:'🎹'},
+  {word:'vlinder',     hint:'Mooi insect met vleugels', emoji:'🦋'},
+  {word:'aardappel',   hint:'Groeit onder de grond', emoji:'🥔'},
+  {word:'magneet',     hint:'Trekt ijzer aan', emoji:'🧲'},
+  {word:'tandenborstel',hint:'Poets je tanden mee', emoji:'🪥'},
+  {word:'spaarpot',    hint:'Bewaar je zakgeld in', emoji:'🐷'},
+  {word:'regenboog',   hint:'Zie je na de regen', emoji:'🌈'},
+  {word:'krokodil',    hint:'Groen dier met scherpe tanden', emoji:'🐊'},
+  {word:'fietsband',   hint:'Zit om het wiel van je fiets', emoji:'🚲'},
+];
+
+const DT_OEFENINGEN = [
+  {zin:'Ik ____ naar school.',    woord:'ga',     keuzes:['gat','ga','gad'],     correct:1, uitleg:'"ga" is een werkwoord (ik-vorm), geen d of t nodig.'},
+  {zin:'Hij ____ het raam.',      woord:'opent',  keuzes:['opend','opent','open'],correct:1, uitleg:'"hij" → je voegt -t toe: opent.'},
+  {zin:'De kat ____ op de mat.', woord:'zit',    keuzes:['zit','zid','sit'],     correct:0, uitleg:'"zit" — de stam van zitten is "zit".'},
+  {zin:'Zij ____ haar fiets.',   woord:'pakt',   keuzes:['pakt','pakd','pac'],   correct:0, uitleg:'"zij" → stam pak + t = pakt.'},
+  {zin:'Wij ____ samen.',        woord:'werken', keuzes:['werkt','werkd','werken'],correct:2,uitleg:'"wij" → geen -t: werken.'},
+  {zin:'Jij ____ te laat.',      woord:'bent',   keuzes:['bend','bent','ben'],   correct:1, uitleg:'"jij" na het werkwoord → bent.'},
+  {zin:'Hij ____ elke dag.',     woord:'loopt',  keuzes:['loodt','loopt','loep'],correct:1, uitleg:'"hij" → stam loop + t = loopt.'},
+  {zin:'Ze ____ goed.',          woord:'danst',  keuzes:['danst','dansd','dans'],correct:0, uitleg:'"ze/zij" → stam dans + t = danst.'},
+  {zin:'Ik ____ je.',            woord:'help',   keuzes:['help','helpt','heldp'],correct:0, uitleg:'"ik" → geen -t: help.'},
+  {zin:'Jij ____ mooi.',         woord:'zingt',  keuzes:['zingt','zingd','zing'],correct:0, uitleg:'"jij" vóór werkwoord → zingt.'},
+  {zin:'De hond ____ blij.',     woord:'is',     keuzes:['ist','is','ies'],      correct:1, uitleg:'"is" heeft geen -t, want het is een onregelmatig werkwoord.'},
+  {zin:'Hij ____ naar huis.',    woord:'fietst', keuzes:['fietst','fietsde','fietsd'],correct:0,uitleg:'"hij" → stam fiets + t = fietst.'},
+  {zin:'Ik ____ mijn boek.',     woord:'lees',   keuzes:['leest','lees','leesd'],correct:1, uitleg:'"ik" → stam lees, geen -t.'},
+  {zin:'Ze ____ de bal.',        woord:'trapt',  keuzes:['trapt','trapd','trap'],correct:0, uitleg:'"ze" → stam trap + t = trapt.'},
+  {zin:'Hij ____ zijn tas.',     woord:'draagt', keuzes:['dragt','draagt','draagd'],correct:1,uitleg:'"hij" → draagt (onregelmatig).'},
+  {zin:'Jij ____ goed.',         woord:'schrijft',keuzes:['schrijft','schrijfd','schrijf'],correct:0,uitleg:'"jij" vóór werkwoord → schrijft.'},
+  {zin:'Ik ____ thuis.',         woord:'blijf',  keuzes:['blijft','blijf','blijfd'],correct:1,uitleg:'"ik" → stam blijf, geen -t.'},
+  {zin:'Ze ____ haar hand.',     woord:'wast',   keuzes:['wast','wasd','was'],   correct:0, uitleg:'"ze" → stam was + t = wast.'},
+  {zin:'Hij ____ de deur.',      woord:'opent',  keuzes:['opend','opent','open'],correct:1, uitleg:'"hij" → open + t = opent.'},
+  {zin:'Wij ____ naar buiten.',  woord:'gaan',   keuzes:['gaat','gaan','gad'],   correct:1, uitleg:'"wij" → geen -t: gaan.'},
+];
+
+const LEZEN_VERHALEN = [
+  { titel:'De verdwaalde hond',
+    tekst:`Bas had een hond die Kofi heette. Op een zonnige dag ontsnapte Kofi uit de tuin. Bas zocht overal: in het park, bij de school en bij de winkel. Eindelijk hoorde hij geblaf achter de bakkerij. Daar zat Kofi, wachtend op een botje!`,
+    vragen:[
+      {v:'Hoe heet de hond van Bas?', keuzes:['Max','Kofi','Rex','Spot'], correct:1},
+      {v:'Waarom zocht Bas zijn hond?', keuzes:['Hij wilde wandelen','De hond was ontsnapt','De hond was ziek','Hij speelde verstoppertje'], correct:1},
+      {v:'Waar vond Bas zijn hond?', keuzes:['In het park','Bij de school','Achter de bakkerij','In de tuin'], correct:2},
+    ]},
+  { titel:'Het geheime recept',
+    tekst:`Oma Lies maakte de lekkerste appeltaart van het dorp. Iedereen vroeg om het recept, maar ze gaf het nooit weg. Op haar verjaardag vertelde ze het geheim aan haar kleindochter Emma: "Het geheim is een beetje extra kaneel en heel veel liefde."`,
+    vragen:[
+      {v:'Wat maakte oma Lies zo goed?', keuzes:['Koekjes','Appeltaart','Stroopwafels','Pannenkoeken'], correct:1},
+      {v:'Wat was het geheim van het recept?', keuzes:['Extra suiker','Extra kaneel en liefde','Geheime kruiden','Meer boter'], correct:1},
+      {v:'Aan wie vertelde oma het recept?', keuzes:['Haar buurvrouw','Het hele dorp','Haar kleindochter Emma','Haar dochter'], correct:2},
+    ]},
+  { titel:'De ruimtereis',
+    tekst:`Astronaut Sara stapte in haar raket. Ze wilde de maan bezoeken. De reis duurde drie dagen. Op de maan zag ze kratten en sterren. Ze plantte een vlag en nam wat maanstenen mee terug naar de aarde.`,
+    vragen:[
+      {v:'Waarheen reisde Sara?', keuzes:['Mars','De zon','De maan','Jupiter'], correct:2},
+      {v:'Hoe lang duurde de reis?', keuzes:['Één dag','Twee dagen','Drie dagen','Een week'], correct:2},
+      {v:'Wat nam Sara mee terug?', keuzes:['Maanplanten','Maanstenen','Een stuk maan','Sterren'], correct:1},
+    ]},
+  { titel:'Het verjaardagsfeest',
+    tekst:`Tom werd 9 jaar. Zijn mama had rode en gele ballonnen opgehangen. Er kwamen zes vriendjes op bezoek. Ze speelden verstoppertje en aten pizza. Als cadeau kreeg Tom een nieuwe voetbal en een boek over dinosaurussen.`,
+    vragen:[
+      {v:'Hoe oud werd Tom?', keuzes:['8','9','10','7'], correct:1},
+      {v:'Hoeveel vriendjes kwamen er?', keuzes:['Vier','Vijf','Zes','Zeven'], correct:2},
+      {v:'Welke cadeaus kreeg Tom?', keuzes:['Een fiets en een bal','Een voetbal en een boek','Een spel en snoep','Boeken en lego'], correct:1},
+    ]},
+  { titel:'De boodschappenlijst',
+    tekst:`Merel moest boodschappen doen voor haar moeder. Op het lijstje stonden: melk, brood, appels en kaas. Bij de kassa had ze 5 euro. De melk kostte 1 euro, het brood 2 euro, de appels 1 euro en de kaas 1 euro. Ze had precies genoeg!`,
+    vragen:[
+      {v:'Hoeveel stond er op het boodschappenlijstje?', keuzes:['3','4','5','6'], correct:1},
+      {v:'Hoeveel geld had Merel?', keuzes:['4 euro','5 euro','6 euro','3 euro'], correct:1},
+      {v:'Wat kostte het brood?', keuzes:['1 euro','2 euro','3 euro','50 cent'], correct:1},
+    ]},
+];
+
+// division sums: {a, b, diff:1/2/3}
+const DELEN_SOMMEN = [
+  {a:6,  b:2, diff:1},{a:8,  b:2, diff:1},{a:10, b:5, diff:1},{a:9,  b:3, diff:1},{a:12, b:4, diff:1},
+  {a:15, b:3, diff:2},{a:18, b:6, diff:2},{a:24, b:4, diff:2},{a:20, b:5, diff:2},{a:36, b:9, diff:2},
+  {a:48, b:6, diff:3},{a:56, b:7, diff:3},{a:63, b:9, diff:3},{a:72, b:8, diff:3},{a:84, b:7, diff:3},
+];
+
+// ── DIVISION ANIMATED EXAMPLES ────────────────────────────
+function getDelenExSteps(a,b){
+  const q=a/b;
+  const steps=[];
+  // Step 0: teacher intro
+  steps.push({type:'intro', html:`<div class="teacher-bubble">👩‍🏫 Vandaag leren we delen! <strong>${a} ÷ ${b}</strong> = ?<br>Dat betekent: ${a} dingen eerlijk verdelen over ${b} groepen.</div>`});
+  // Step 1: show all objects
+  const emojis=['🍎','⭐','🏀','🍪','🎯','💎','🌟','🍭'];
+  const emoji = emojis[Math.floor((a+b)%emojis.length)];
+  steps.push({type:'objects', html:`<div class="teacher-bubble">👩‍🏫 Kijk, hier zijn <strong>${a} ${emoji}</strong>!</div><div class="obj-stage">${emoji.repeat(a).split('').map(e=>`<span class="obj-item">${e}</span>`).join('')}</div>`});
+  // Step 2: draw groups
+  let groupsHtml='<div class="teacher-bubble">👩‍🏫 We maken <strong>${b} groepen</strong>. Stop ${q} ${emoji} in elke groep.</div><div class="groups-stage">';
+  for(let g=0;g<b;g++){
+    groupsHtml+=`<div class="group-box"><div class="group-label">Groep ${g+1}</div>${emoji.repeat(q).split('').map(e=>`<span class="obj-item">${e}</span>`).join('')}</div>`;
   }
+  groupsHtml+='</div>';
+  steps.push({type:'groups', html:groupsHtml.replace('${b}',b).replace('${q}',q).replace('${emoji}',emoji)});
+  // Step 3: reveal answer
+  steps.push({type:'answer', html:`<div class="teacher-bubble">👩‍🏫 <strong>Elke groep heeft ${q} ${emoji}!</strong><br>Dus: <span class="reveal-sum">${a} ÷ ${b} = <strong>${q}</strong> 🎉</span></div>`});
+  return steps;
+}
+
+// ── MODULE STATE ──────────────────────────────────────────
+let moduleId='', moduleQuestions=[], moduleIdx=0, moduleCorrect=0;
+let exStep=0, exSteps=[];
+let tafelN=0;
+
+// ── START MODULE ──────────────────────────────────────────
+function startModule(id){
+  moduleId=id; moduleIdx=0; moduleCorrect=0; exStep=0; exSteps=[];
+  sfxModStart();
+  if(id==='tafels'){ renderTafelPicker(); return; }
+  buildQuestions(id);
+  renderQuestion();
+}
+function retryModule(){ startModule(moduleId); }
+
+function buildQuestions(id){
+  moduleQuestions=[];
+  if(id==='woorden'){
+    const set=shuffle(WOORDEN_SETS).slice(0,6);
+    set.forEach(w=>{
+      // scramble letters
+      const scrambled=shuffle(w.word.split('')).join('');
+      moduleQuestions.push({type:'woorden',word:w.word,scrambled,hint:w.hint,emoji:w.emoji});
+    });
+  } else if(id==='spelling'){
+    const set=shuffle(DT_OEFENINGEN).slice(0,8);
+    set.forEach(o=>moduleQuestions.push({type:'spelling',...o}));
+  } else if(id==='delen'){
+    // show animated example first, then 5 questions
+    const diff = Math.min(3, Math.floor(((progress.sessions||[]).filter(s=>s.module==='delen').length)/2)+1);
+    const pool = DELEN_SOMMEN.filter(s=>s.diff<=diff);
+    const picked = shuffle(pool).slice(0,5);
+    // first item: example
+    const exItem = picked[0];
+    moduleQuestions.push({type:'delen_ex', ...exItem});
+    picked.forEach(s=>moduleQuestions.push({type:'delen',a:s.a,b:s.b}));
+  } else if(id==='lezen'){
+    const story=LEZEN_VERHALEN[rnd(0,LEZEN_VERHALEN.length-1)];
+    moduleQuestions.push({type:'lezen_story', titel:story.titel, tekst:story.tekst});
+    story.vragen.forEach(q=>moduleQuestions.push({type:'lezen_v',...q}));
+  } else if(id==='rekenen'){
+    const sessions=(progress.sessions||[]).filter(s=>s.module==='rekenen').length;
+    const level=Math.min(3,Math.floor(sessions/3)+1);
+    moduleQuestions.push({type:'rekenen_ex', level});
+    for(let i=0;i<8;i++) moduleQuestions.push({type:'rekenen',...genRekenSom(level)});
+  }
+}
+
+function genRekenSom(level){
+  if(level===1){
+    const a=rnd(10,99), b=rnd(10,Math.min(99,100-a));
+    return Math.random()<0.5?{a,b,op:'+',ans:a+b}:{a:a+b,b:a,op:'-',ans:b};
+  } else if(level===2){
+    const a=rnd(50,499),b=rnd(10,Math.min(499,500-a));
+    return Math.random()<0.5?{a,b,op:'+',ans:a+b}:{a:a+b,b:a,op:'-',ans:b};
+  } else {
+    const a=rnd(100,900),b=rnd(50,Math.min(900,1000-a));
+    return Math.random()<0.5?{a,b,op:'+',ans:a+b}:{a:a+b,b:a,op:'-',ans:b};
+  }
+}
+
+function getRekenExSteps(level){
+  const examples=[
+    // level 1
+    [{s:'We gebruiken de <strong>splitsmethode</strong>! 🔢',t:'Bijvoorbeeld: <strong>47 + 35</strong>'},{s:'Split de getallen:<br>47 = 40 + 7<br>35 = 30 + 5',t:'Schrift: breek elk getal in tientallen en eenheden.'},{s:'Tel tientallen op:<br>40 + 30 = <strong>70</strong>',t:'Dan eenheden:<br>7 + 5 = <strong>12</strong>'},{s:'70 + 12 = <strong>82</strong> 🎉',t:'Klaar! 47 + 35 = 82'}],
+    // level 2
+    [{s:'We gebruiken <strong>splitsen</strong> tot 500! 🔢',t:'Voorbeeld: <strong>234 + 158</strong>'},{s:'Split: 234 = 200+30+4<br>158 = 100+50+8',t:'Honderdtallen, tientallen, eenheden apart.'},{s:'100en: 200+100=<strong>300</strong><br>10en: 30+50=<strong>80</strong><br>1en: 4+8=<strong>12</strong>',t:'Tel alles op!'},{s:'300+80+12=<strong>392</strong> 🎉',t:'234 + 158 = 392'}],
+    // level 3
+    [{s:'Nu tot <strong>1000</strong>! 🚀',t:'Voorbeeld: <strong>645 + 278</strong>'},{s:'Split: 645=600+40+5<br>278=200+70+8',t:'Maak groepjes van 100, 10, 1.'},{s:'100en: 600+200=<strong>800</strong><br>10en: 40+70=<strong>110</strong><br>1en: 5+8=<strong>13</strong>',t:'Let op: 110 en 13 gaan we optellen!'},{s:'800+110+13=<strong>923</strong> 🎉',t:'645 + 278 = 923'}],
+  ];
+  return examples[level-1];
+}
+
+// ── RENDER QUESTION ───────────────────────────────────────
+function renderQuestion(){
+  if(moduleIdx>=moduleQuestions.length){ showCelebration(); return; }
+  const q=moduleQuestions[moduleIdx];
+  const ex=document.getElementById('exerciseScreen');
+  ex.innerHTML='';
+
+  // header
+  ex.innerHTML=`<div class="ex-header">
+    <button class="btn-icon" onclick="goHome()">🏠</button>
+    <div class="ex-progress">${moduleIdx+1}/${moduleQuestions.length}</div>
+    <div class="ex-dots">${moduleQuestions.map((_,i)=>`<span class="dot${i<moduleIdx?' done':i===moduleIdx?' active':''}" style="width:8px;height:8px;border-radius:50%;display:inline-block;margin:2px;background:${i<moduleIdx?'#A3E635':i===moduleIdx?'#FACC15':'rgba(255,255,255,.3)'}"></span>`).join('')}</div>
+  </div><div class="ex-body" id="exBody"></div>`;
+
+  const body=document.getElementById('exBody');
+
+  if(q.type==='woorden'){
+    body.innerHTML=`<div class="q-emoji">${q.emoji}</div>
+    <div class="q-hint">${q.hint}</div>
+    <div class="scramble">${q.scrambled.split('').map((c,i)=>`<span class="slet" data-i="${i}">${c}</span>`).join('')}</div>
+    <div class="q-label">Herschik de letters om het woord te maken:</div>
+    <input id="wordInput" class="word-input" type="text" placeholder="Typ het woord..." autocomplete="off" autocorrect="off" spellcheck="false" style="text-transform:lowercase">
+    <button class="btn-primary" onclick="answerWoord()">Controleren ✓</button>
+    <div id="feedback" class="feedback hidden"></div>`;
+    setTimeout(()=>{ const i=document.getElementById('wordInput'); if(i) i.focus(); },200);
+    document.getElementById('wordInput').addEventListener('keyup',e=>{ if(e.key==='Enter') answerWoord(); });
+  } else if(q.type==='spelling'){
+    body.innerHTML=`<div class="q-zin">${q.zin.replace('____','<span class="blank">____</span>')}</div>
+    <div class="q-label">Kies het juiste woord:</div>
+    <div class="mc-opts">${q.keuzes.map((k,i)=>`<button class="mc-btn" onclick="answerSpelling(${i})">${k}</button>`).join('')}</div>
+    <div id="feedback" class="feedback hidden"></div>`;
+  } else if(q.type==='delen_ex'){
+    exSteps=getDelenExSteps(q.a,q.b); exStep=0;
+    body.innerHTML=`<div class="teacher-intro">👩‍🏫 Eerst een voorbeeld!</div>
+    <div id="exStepDiv">${exSteps[0].html}</div>
+    <button class="btn-primary" onclick="nextExStep()">Volgende stap →</button>`;
+  } else if(q.type==='delen'){
+    const wrong1=q.b===1?q.a+2:q.a/q.b+1, wrong2=q.a/q.b+2;
+    const ans=q.a/q.b;
+    const opts=shuffle([ans,wrong1,wrong2]);
+    body.innerHTML=`<div class="delen-sum">${q.a} ÷ ${q.b} = ?</div>
+    <div class="mc-opts">${opts.map((o,i)=>`<button class="mc-btn" onclick="answerDelen(${o},${ans})">${o}</button>`).join('')}</div>
+    <div id="feedback" class="feedback hidden"></div>`;
+  } else if(q.type==='lezen_story'){
+    body.innerHTML=`<div class="story-title">${q.titel}</div>
+    <div class="story-text">${q.tekst}</div>
+    <button class="btn-primary" onclick="nextQ()">Vragen beantwoorden →</button>`;
+  } else if(q.type==='lezen_v'){
+    body.innerHTML=`<div class="q-vraag">${q.v}</div>
+    <div class="mc-opts">${q.keuzes.map((k,i)=>`<button class="mc-btn" onclick="answerLezen(${i},${q.correct})">${k}</button>`).join('')}</div>
+    <div id="feedback" class="feedback hidden"></div>`;
+  } else if(q.type==='rekenen_ex'){
+    exSteps=getRekenExSteps(q.level); exStep=0;
+    body.innerHTML=`<div class="teacher-intro">👩‍🏫 Eerst uitleggen hoe we rekenen!</div>
+    <div id="exStepDiv"><div class="teacher-bubble">${exSteps[0].s}</div><div class="ex-substep">${exSteps[0].t}</div></div>
+    <button class="btn-primary" onclick="nextRekenEx()">Volgende stap →</button>`;
+  } else if(q.type==='rekenen'){
+    body.innerHTML=`<div class="reken-sum">${q.a} ${q.op} ${q.b} = ?</div>
+    <input id="rekenInput" class="word-input" type="number" placeholder="Jouw antwoord..." inputmode="numeric">
+    <button class="btn-primary" onclick="answerRekenen()">Controleren ✓</button>
+    <div id="feedback" class="feedback hidden"></div>`;
+    setTimeout(()=>{ const i=document.getElementById('rekenInput'); if(i) i.focus(); },200);
+    document.getElementById('rekenInput').addEventListener('keyup',e=>{ if(e.key==='Enter') answerRekenen(); });
+  } else if(q.type==='tafels_learn'){
+    body.innerHTML=`<div class="tafel-learn-card">
+      <div class="tafel-num">${q.a}</div>
+      <div class="tafel-op">×</div>
+      <div class="tafel-num">${q.b}</div>
+      <div class="tafel-eq">=</div>
+      <div class="tafel-ans" id="tafAns" style="opacity:0">✨ ${q.ans}</div>
+    </div>
+    <button class="btn-secondary" onclick="revealTafel()">Toon antwoord 👀</button>
+    <button class="btn-primary" id="nextTafelBtn" onclick="nextQ()" style="display:none">Volgende →</button>`;
+  } else if(q.type==='tafels_quiz'){
+    const wrong1=q.ans+rnd(1,4), wrong2=q.ans-rnd(1,4)<1?q.ans+rnd(5,8):q.ans-rnd(1,4);
+    const opts=shuffle([q.ans,wrong1,wrong2]);
+    body.innerHTML=`<div class="tafel-quiz-sum">${q.a} × ${q.b} = ?</div>
+    <div class="mc-opts">${opts.map(o=>`<button class="mc-btn" onclick="answerTafels(${o},${q.ans})">${o}</button>`).join('')}</div>
+    <div id="feedback" class="feedback hidden"></div>`;
+  }
+
+  showScreen('exerciseScreen');
+}
+
+// ── EXERCISE STEP HELPERS ─────────────────────────────────
+function nextExStep(){
+  exStep++;
+  if(exStep>=exSteps.length){ moduleIdx++; renderQuestion(); return; }
+  document.getElementById('exStepDiv').innerHTML=exSteps[exStep].html;
+  sfxTap();
+}
+function nextRekenEx(){
+  exStep++;
+  if(exStep>=exSteps.length){ moduleIdx++; renderQuestion(); return; }
+  document.getElementById('exStepDiv').innerHTML=`<div class="teacher-bubble">${exSteps[exStep].s}</div><div class="ex-substep">${exSteps[exStep].t}</div>`;
+  sfxTap();
+}
+function revealTafel(){
+  document.getElementById('tafAns').style.opacity='1';
+  document.getElementById('nextTafelBtn').style.display='';
+  sfxCorrect();
+}
+function nextQ(){ moduleIdx++; renderQuestion(); }
+
+// ── ANSWER HANDLERS ───────────────────────────────────────
+function showFeedback(ok, msg){
+  const fb=document.getElementById('feedback');
+  if(!fb) return;
+  fb.className='feedback '+(ok?'fb-ok':'fb-wrong');
+  fb.textContent=msg;
+  fb.classList.remove('hidden');
+  if(ok) sfxCorrect(); else sfxWrong();
+}
+
+function answerWoord(){
+  const q=moduleQuestions[moduleIdx];
+  const val=(document.getElementById('wordInput').value||'').trim().toLowerCase();
+  const ok=val===q.word.toLowerCase();
+  showFeedback(ok, ok?'Super! ✅ "'+q.word+'" is correct! 🎉':'Bijna! Het woord is: "'+q.word+'" 💪');
+  if(ok) moduleCorrect++;
+  setTimeout(()=>{ moduleIdx++; renderQuestion(); },1400);
+}
+function answerSpelling(idx){
+  const q=moduleQuestions[moduleIdx];
+  const ok=idx===q.correct;
+  showFeedback(ok, ok?'Goed! ✅ '+q.uitleg:'Helaas! ❌ '+q.uitleg);
+  if(ok) moduleCorrect++;
+  document.querySelectorAll('.mc-btn').forEach((b,i)=>{
+    b.disabled=true;
+    if(i===q.correct) b.style.background='#4ADE80'; else if(i===idx) b.style.background='#F87171';
+  });
+  setTimeout(()=>{ moduleIdx++; renderQuestion(); },2000);
+}
+function answerDelen(chosen,correct){
+  const ok=chosen===correct;
+  showFeedback(ok, ok?'Geweldig! ÷ correct! ✅':'Niet helemaal... het antwoord was '+correct+' 💪');
+  if(ok) moduleCorrect++;
+  document.querySelectorAll('.mc-btn').forEach(b=>{
+    b.disabled=true;
+    if(parseInt(b.textContent)===correct) b.style.background='#4ADE80';
+    else if(parseInt(b.textContent)===chosen) b.style.background='#F87171';
+  });
+  setTimeout(()=>{ moduleIdx++; renderQuestion(); },1500);
+}
+function answerLezen(idx,correct){
+  const ok=idx===correct;
+  showFeedback(ok, ok?'Juist! ✅ Goed gelezen!':'Niet helemaal, kijk nog eens naar de tekst. 💪');
+  if(ok) moduleCorrect++;
+  document.querySelectorAll('.mc-btn').forEach((b,i)=>{
+    b.disabled=true;
+    if(i===correct) b.style.background='#4ADE80'; else if(i===idx) b.style.background='#F87171';
+  });
+  setTimeout(()=>{ moduleIdx++; renderQuestion(); },1800);
+}
+function answerTafels(chosen,correct){
+  const ok=chosen===correct;
+  showFeedback(ok, ok?'Super! ✅ Klopt precies!':'Bijna! Het antwoord was '+correct+' 💪');
+  if(ok) moduleCorrect++;
+  document.querySelectorAll('.mc-btn').forEach(b=>{
+    b.disabled=true;
+    if(parseInt(b.textContent)===correct) b.style.background='#4ADE80';
+    else if(parseInt(b.textContent)===chosen) b.style.background='#F87171';
+  });
+  setTimeout(()=>{ moduleIdx++; renderQuestion(); },1500);
+}
+function answerRekenen(){
+  const q=moduleQuestions[moduleIdx];
+  const val=parseInt(document.getElementById('rekenInput').value||'NaN');
+  const ok=val===q.ans;
+  showFeedback(ok, ok?'Helemaal goed! ✅ '+q.a+' '+q.op+' '+q.b+' = '+q.ans+' 🎉':'Niet helemaal... het antwoord was '+q.ans+'. Probeer de splitsmethode! 💪');
+  if(ok) moduleCorrect++;
+  setTimeout(()=>{ moduleIdx++; renderQuestion(); },1600);
+}
+
+// ── TAFELS PICKER ─────────────────────────────────────────
+function renderTafelPicker(){
+  const ex=document.getElementById('exerciseScreen');
+  ex.innerHTML=`<div class="ex-header">
+    <button class="btn-icon" onclick="goHome()">🏠</button>
+    <div class="ex-progress">Kies een tafel</div>
+  </div>
+  <div class="ex-body">
+    <div class="tafel-picker-title">🔢 Welke tafel wil je oefenen?</div>
+    <div class="tafel-grid">${Array.from({length:20},(_,i)=>`<button class="tafel-pick-btn${(progress.tafelsMastered||[]).includes(i+1)?' mastered':''}" onclick="selectTafel(${i+1})">${i+1}${(progress.tafelsMastered||[]).includes(i+1)?'⭐':''}</button>`).join('')}</div>
+  </div>`;
+  showScreen('exerciseScreen');
+}
+
+function selectTafel(n){
+  tafelN=n; moduleQuestions=[]; moduleIdx=0; moduleCorrect=0;
+  // learn mode: show all 10 facts
+  for(let i=1;i<=10;i++) moduleQuestions.push({type:'tafels_learn',a:n,b:i,ans:n*i});
+  // quiz: 8 random
+  const quizPool=shuffle(Array.from({length:10},(_,i)=>({type:'tafels_quiz',a:n,b:i+1,ans:n*(i+1)})));
+  quizPool.slice(0,8).forEach(q=>moduleQuestions.push(q));
+  sfxModStart();
+  renderQuestion();
+}
+
+// ── CELEBRATION ───────────────────────────────────────────
+function showCelebration(){
+  const total=moduleQuestions.filter(q=>!['delen_ex','lezen_story','rekenen_ex','tafels_learn'].includes(q.type)).length;
+  const pct=total>0?Math.round(moduleCorrect/total*100):100;
+  const stars=pct>=90?3:pct>=70?2:1;
+
+  // save stars and session
+  if(!progress.stars) progress.stars={};
+  progress.stars[moduleId]=Math.max(progress.stars[moduleId]||0,stars);
+  progress.totalStars=(progress.totalStars||0)+stars;
+  if(!(progress.todayDone||[]).includes(moduleId)){
+    if(!progress.todayDone) progress.todayDone=[];
+    progress.todayDone.push(moduleId);
+  }
+  if(moduleId==='tafels' && tafelN){
+    if(!progress.tafelsMastered) progress.tafelsMastered=[];
+    if(pct>=80 && !progress.tafelsMastered.includes(tafelN)) progress.tafelsMastered.push(tafelN);
+  }
+  // save session record for analytics
+  if(!progress.sessions) progress.sessions=[];
+  progress.sessions.push({module:moduleId, score:pct, stars, ts:Date.now()});
   saveProgress();
 
-  document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
-  document.getElementById('celebrationScreen').classList.remove('hidden');
+  sfxFanfare();
 
-  const emojis={3:'🏆',2:'⭐',1:'💪'};
-  const titles={3:'Fantastisch!!! 🎉',2:'Super goed! 👏',1:'Goed geprobeerd! 💪'};
-  const subs={3:'Jij bent een echte Slimbo-ster!',2:'Bijna perfect! Je groeit elke dag!',1:'Oefenen maakt perfect — doe het nog eens!'};
-  const fun={
-    3:['Jij bent slimmer dan een calculator! 🔢','Einstein was ook goed in school! 🧠','De meester zou trots zijn! 👨‍🏫'],
-    2:['Bijna 3 sterren — nog een beetje oefenen!','Je hersenen groeien nu echt! 🧠','Top prestatie voor groep 5!'],
-    1:['Fouten maken = leren! Probeer het nog eens!','De volgende keer gaat het beter! 🚀','Elke poging maakt je slimmer!'],
-  };
+  const msgs=['Geweldig! 🚀','Toppertje! ⭐','Super gedaan! 🎯','Fantastisch! 🏆','Briljant! 💎'];
+  const msg=msgs[rnd(0,msgs.length-1)];
 
-  document.getElementById('celEmoji').textContent=emojis[stars];
-  document.getElementById('celTitle').textContent=titles[stars];
-  document.getElementById('celSub').textContent=subs[stars];
-  document.getElementById('celStars').textContent=['⭐','⭐⭐','⭐⭐⭐'][stars-1];
-  document.getElementById('celScore').textContent=moduleCorrect+' / '+total+' goed!';
-  document.getElementById('celFunMsg').textContent=fun[stars][Math.floor(Math.random()*fun[stars].length)];
-
-  if(stars===3) confetti();
-  else if(stars===2) sfxCongrats();
-}
-
-function retryModule(){ startModule(currentModule); }
-
-// ── CONFETTI ──
-function confetti(){
-  sfxCongrats();
-  const wrap=document.getElementById('confettiWrap');
-  wrap.innerHTML='';
-  const colors=['#FF6B35','#FFD23F','#06D6A0','#38BDF8','#A855F7','#FF47A3'];
-  for(let i=0;i<60;i++){
-    const c=document.createElement('div');
-    c.className='confetto';
-    c.style.cssText=`left:${Math.random()*100}%;background:${colors[i%colors.length]};animation-duration:${1.5+Math.random()*2}s;animation-delay:${Math.random()*.5}s;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;`;
-    wrap.appendChild(c);
+  document.getElementById('celMsg').textContent=msg;
+  document.getElementById('celSub').textContent=pct+'% goed! '+['⭐','⭐⭐','⭐⭐⭐'][stars-1];
+  document.getElementById('celScore').textContent=moduleCorrect+'/'+total+' vragen goed!';
+  const confWrap=document.getElementById('confetti');
+  if(confWrap){
+    confWrap.innerHTML='';
+    for(let i=0;i<40;i++){
+      const s=document.createElement('span');
+      s.className='conf-piece';
+      s.textContent=['🌟','⭐','💫','✨','🎉','🎊','🏆'][i%7];
+      s.style.cssText=`position:absolute;left:${rnd(5,95)}%;top:${rnd(5,90)}%;font-size:${rnd(14,28)}px;animation:confettiFall ${rnd(1,3)}s ease-in forwards;animation-delay:${i*0.07}s;opacity:1`;
+      confWrap.appendChild(s);
+    }
   }
-  setTimeout(()=>wrap.innerHTML='',4000);
+  showScreen('celebrationScreen');
 }
 
-// ══════════════════════════════════════════════
-// BRAM REVIEW MODE
-// ══════════════════════════════════════════════
-function showBram(){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
-  document.getElementById('bramScreen').classList.remove('hidden');
+// ── BRAM REVIEWER ─────────────────────────────────────────
+function renderBram(){
+  const dp=loadProgressByName('devvrat');
+  const totalSessions=(dp.sessions||[]).length;
+  const todayMins=dp.todayMins||0;
+
+  let html=`<div class="sandy-header"><button class="btn-icon" onclick="logout()">← Uitloggen</button><h2 style="margin:0;font-size:1.1rem">Bram — Reviewer 🔍</h2></div>
+  <div class="sandy-body">
+    <div class="sandy-card">
+      <h3>📊 Devvrat's voortgang</h3>
+      <p>Totaal sessies: <strong>${totalSessions}</strong></p>
+      <p>Vandaag actief: <strong>${todayMins} min</strong></p>
+      <p>Sterren: <strong>${dp.totalStars||0} ⭐</strong></p>
+      <p>Streak: <strong>${dp.streak||1} 🔥</strong></p>
+    </div>
+    <div class="sandy-card">
+      <h3>🗂 Module resultaten</h3>`;
+  ['woorden','spelling','delen','lezen','tafels','rekenen'].forEach(m=>{
+    const s=dp.stars?.[m]||0;
+    const mSessions=(dp.sessions||[]).filter(x=>x.module===m);
+    const avgScore=mSessions.length?Math.round(mSessions.reduce((a,x)=>a+x.score,0)/mSessions.length):null;
+    html+=`<div style="display:flex;align-items:center;justify-content:space-between;margin:6px 0">
+      <span style="text-transform:capitalize">${m}</span>
+      <span>${s>0?'⭐'.repeat(s):'—'} ${avgScore!==null?avgScore+'%':''}</span>
+    </div>`;
+  });
+  html+=`</div>
+    <div class="sandy-card">
+      <h3>📝 Inhoud review</h3>
+      <p style="font-size:.85rem;opacity:.7">Bekijk en markeer oefeningen:</p>`;
+  DT_OEFENINGEN.slice(0,5).forEach((o,i)=>{
+    const flagged=(dp.flags||{})[`dt_${i}`];
+    html+=`<div style="background:rgba(255,255,255,.05);padding:8px;border-radius:8px;margin:6px 0;font-size:.85rem">
+      <div>${o.zin}</div>
+      <div style="opacity:.6">Antwoord: ${o.keuzes[o.correct]}</div>
+      <button onclick="flagItem('dt_${i}')" style="margin-top:4px;padding:4px 10px;border-radius:6px;border:none;background:${flagged?'#F87171':'rgba(255,255,255,.15)'};color:#fff;cursor:pointer;font-size:.8rem">${flagged?'✓ Gemarkeerd':'⚑ Markeer'}</button>
+    </div>`;
+  });
+  html+=`</div></div>`;
+  document.getElementById('bramScreen').innerHTML=html;
+}
+
+function flagItem(key){
+  const dp=loadProgressByName('devvrat');
+  if(!dp.flags) dp.flags={};
+  dp.flags[key]=!dp.flags[key];
+  saveProgressByName('devvrat',dp);
+  sfxTap();
   renderBram();
 }
 
-function renderBram(){
-  // Load devvrat's progress for display
-  const devvratAcct=ACCOUNTS.find(a=>a.name==='devvrat');
-  const devProgress=devvratAcct?loadProgress(devvratAcct):{};
-  const flags=progress.flags||{};
+// ── SANDY PARENT DASHBOARD ─────────────────────────────────
+function renderSandy(){
+  const dp=loadProgressByName('devvrat');
+  const allSessions=dp.sessions||[];
+  const todayMins=dp.todayMins||0;
+  const minGoal=dp.minGoal||120;
 
-  let html=`
-    <div class="bram-progress">
-      <div class="bram-mod-title">📊 Devvrat's Voortgang</div>
-      <div class="bram-stat"><span>Totaal sterren</span><span class="bram-stat-val">⭐ ${devProgress.totalStars||0}</span></div>
-      <div class="bram-stat"><span>Dagstreek</span><span class="bram-stat-val">🔥 ${devProgress.streak||1} dagen</span></div>
-      <div class="bram-stat"><span>Woordenschat ⭐</span><span class="bram-stat-val">${'⭐'.repeat(devProgress.stars?.woorden||0)||'nog niet gedaan'}</span></div>
-      <div class="bram-stat"><span>Spelling d/t ⭐</span><span class="bram-stat-val">${'⭐'.repeat(devProgress.stars?.spelling||0)||'nog niet gedaan'}</span></div>
-      <div class="bram-stat"><span>Delen ⭐</span><span class="bram-stat-val">${'⭐'.repeat(devProgress.stars?.delen||0)||'nog niet gedaan'}</span></div>
-      <div class="bram-stat"><span>Lezen ⭐</span><span class="bram-stat-val">${'⭐'.repeat(devProgress.stars?.lezen||0)||'nog niet gedaan'}</span></div>
+  // compute per-module stats
+  const modules=['woorden','spelling','delen','lezen','tafels','rekenen'];
+  const modNames={woorden:'Vocabulary',spelling:'Spelling d/t',delen:'Division',lezen:'Reading',tafels:'Times Tables',rekenen:'Arithmetic'};
+  const modStats={};
+  modules.forEach(m=>{
+    const ms=allSessions.filter(s=>s.module===m);
+    modStats[m]={sessions:ms.length, avg:ms.length?Math.round(ms.reduce((a,x)=>a+x.score,0)/ms.length):null, stars:dp.stars?.[m]||0, last:ms.length?ms[ms.length-1].ts:null};
+  });
+  const sorted=modules.slice().sort((a,b)=>(modStats[b].avg||0)-(modStats[a].avg||0));
+  const strong=sorted.slice(0,2), weak=sorted.slice(-2), improving=[];
+  // improving: sessions trending up
+  modules.forEach(m=>{
+    const ms=allSessions.filter(s=>s.module===m);
+    if(ms.length>=2 && ms[ms.length-1].score > ms[ms.length-2].score) improving.push(m);
+  });
+
+  // daily time chart (last 7 days)
+  const dailyTime=dp.dailyTime||{};
+  const days=[]; for(let i=6;i>=0;i--){ const d=new Date(Date.now()-i*86400000); days.push(d.toISOString().slice(0,10)); }
+  const maxT=Math.max(120,...days.map(d=>dailyTime[d]||0));
+  const dayLabels=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  let html=`<div class="sandy-header">
+    <button class="btn-icon" onclick="logout()">← Logout</button>
+    <h2 style="margin:0;font-size:1.1rem">Sandy — Parent Dashboard 📊</h2>
+  </div>
+  <div class="sandy-body">
+
+    <!-- Overview card -->
+    <div class="sandy-card">
+      <h3>📈 Today's Overview</h3>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div class="stat-pill">⏱ ${todayMins} min today</div>
+        <div class="stat-pill">🎯 Goal: ${minGoal} min</div>
+        <div class="stat-pill">⭐ ${dp.totalStars||0} stars</div>
+        <div class="stat-pill">🔥 ${dp.streak||1} day streak</div>
+      </div>
+      <div style="margin-top:12px">
+        <div style="font-size:.8rem;opacity:.7;margin-bottom:4px">Daily progress (${todayMins}/${minGoal} min)</div>
+        <div style="background:rgba(255,255,255,.1);border-radius:20px;height:12px;overflow:hidden">
+          <div style="height:100%;border-radius:20px;background:${todayMins>=minGoal?'#FACC15':'#A3E635'};width:${Math.min(100,Math.round(todayMins/minGoal*100))}%;transition:width .5s"></div>
+        </div>
+      </div>
     </div>
 
-    <div class="bram-card">
-      <div class="bram-mod-title">✏️ Spelling d/t — Alle oefeningen (${DT_OEFENINGEN.length})</div>
-      ${DT_OEFENINGEN.map((o,i)=>`
-        <div class="bram-item">
-          <div class="bram-item-q">${i+1}. ${o.zin}</div>
-          <div class="bram-item-a">✓ Antwoord: ${o.goed} &nbsp;|&nbsp; Opties: ${o.opties.join(' / ')}</div>
-          <div style="font-size:12px;color:var(--text3);margin-top:3px">${o.uitleg.replace(/<[^>]*>/g,'')}</div>
-          <button class="bram-flag ${flags['dt_'+i]?'flagged':''}" onclick="bramFlag('dt_${i}',this)">${flags['dt_'+i]?'🚩 Gemarkeerd':'🚩 Markeer'}</button>
-        </div>`).join('')}
+    <!-- Module performance -->
+    <div class="sandy-card">
+      <h3>📚 Module Performance</h3>
+      ${modules.map(m=>{
+        const st=modStats[m];
+        const pct=st.avg||0;
+        return `<div style="margin:8px 0">
+          <div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:3px">
+            <span>${modNames[m]}</span><span>${st.avg!==null?st.avg+'%':'No data'} ${'⭐'.repeat(st.stars)||''}</span>
+          </div>
+          <div style="background:rgba(255,255,255,.1);border-radius:20px;height:8px;overflow:hidden">
+            <div style="height:100%;border-radius:20px;background:${pct>=80?'#4ADE80':pct>=60?'#FACC15':'#F87171'};width:${pct}%"></div>
+          </div>
+        </div>`;
+      }).join('')}
     </div>
 
-    <div class="bram-card">
-      <div class="bram-mod-title">➗ Delen — Alle sommen (${DELEN_SOMMEN.length})</div>
-      ${DELEN_SOMMEN.map((d,i)=>`
-        <div class="bram-item">
-          <div class="bram-item-q">${i+1}. ${d.som} = ${d.ant}</div>
-          <div style="font-size:13px;color:var(--text2);margin-top:3px">${d.woordsom}</div>
-          <button class="bram-flag ${flags['del_'+i]?'flagged':''}" onclick="bramFlag('del_${i}',this)">${flags['del_'+i]?'🚩 Gemarkeerd':'🚩 Markeer'}</button>
-        </div>`).join('')}
+    <!-- Strong / Weak / Improving -->
+    <div class="sandy-card">
+      <h3>🔍 Areas</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:rgba(74,222,128,.1);border:1px solid #4ADE8055;border-radius:10px;padding:10px">
+          <div style="font-size:.75rem;font-weight:700;color:#4ADE80;margin-bottom:6px">💪 STRONG</div>
+          ${strong.map(m=>`<div style="font-size:.8rem">${modNames[m]}</div>`).join('')||'<div style="opacity:.5;font-size:.8rem">Keep going!</div>'}
+        </div>
+        <div style="background:rgba(248,113,113,.1);border:1px solid #F8717155;border-radius:10px;padding:10px">
+          <div style="font-size:.75rem;font-weight:700;color:#F87171;margin-bottom:6px">📌 NEEDS WORK</div>
+          ${weak.map(m=>`<div style="font-size:.8rem">${modNames[m]}</div>`).join('')||'<div style="opacity:.5;font-size:.8rem">All good!</div>'}
+        </div>
+      </div>
+      ${improving.length?`<div style="margin-top:8px;background:rgba(250,204,21,.1);border:1px solid #FACC1555;border-radius:10px;padding:10px">
+        <div style="font-size:.75rem;font-weight:700;color:#FACC15;margin-bottom:4px">📈 IMPROVING</div>
+        ${improving.map(m=>`<span style="font-size:.8rem;margin-right:8px">${modNames[m]}</span>`).join('')}
+      </div>`:''}
     </div>
 
-    <div class="bram-card">
-      <div class="bram-mod-title">📖 Begrijpend lezen — Alle verhalen (${LEZEN_VERHALEN.length})</div>
-      ${LEZEN_VERHALEN.map((v,i)=>`
-        <div class="bram-item">
-          <div class="bram-item-q">${v.titel}</div>
-          <div style="font-size:12px;color:var(--text3);margin-top:3px">${v.tekst.substring(0,120)}...</div>
-          ${v.vragen.map((q,j)=>`<div style="font-size:13px;color:var(--text2);margin-top:6px">V${j+1}: ${q.vraag}<br>✓ ${q.opties[q.goed]}</div>`).join('')}
-          <button class="bram-flag ${flags['lezen_'+i]?'flagged':''}" onclick="bramFlag('lezen_${i}',this)">${flags['lezen_'+i]?'🚩 Gemarkeerd':'🚩 Markeer'}</button>
-        </div>`).join('')}
+    <!-- Daily time chart -->
+    <div class="sandy-card">
+      <h3>📅 Daily Activity (last 7 days)</h3>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:80px;padding-top:8px">
+        ${days.map(d=>{
+          const mins=dailyTime[d]||0;
+          const h=Math.round((mins/maxT)*70)||2;
+          const lbl=dayLabels[new Date(d+'T12:00:00').getDay()];
+          return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+            <div style="font-size:.65rem;opacity:.6">${mins>0?mins:''}</div>
+            <div style="width:100%;height:${h}px;background:${mins>=minGoal?'#FACC15':mins>0?'#A3E635':'rgba(255,255,255,.1)'};border-radius:4px 4px 0 0"></div>
+            <div style="font-size:.65rem;opacity:.7">${lbl}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="font-size:.7rem;opacity:.5;margin-top:4px">🟡 = goal met, 🟢 = partial</div>
     </div>
 
-    <div class="bram-card">
-      <div class="bram-mod-title">📚 Woordenschat — Alle sets (${WOORDEN_SETS.length} thema's)</div>
-      ${WOORDEN_SETS.map((s,i)=>`
-        <div class="bram-item">
-          <div class="bram-item-q">${s.thema}</div>
-          ${s.woorden.map(w=>`<div style="font-size:13px;color:var(--text2);margin-top:4px">${w.emoji} <strong>${w.woord}</strong> — ${w.en}</div>`).join('')}
-          <button class="bram-flag ${flags['wrd_'+i]?'flagged':''}" onclick="bramFlag('wrd_${i}',this)">${flags['wrd_'+i]?'🚩 Gemarkeerd':'🚩 Markeer'}</button>
-        </div>`).join('')}
+    <!-- Recent sessions -->
+    <div class="sandy-card">
+      <h3>🕐 Recent Sessions</h3>
+      ${allSessions.slice(-5).reverse().map(s=>{
+        const d=new Date(s.ts);
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:.85rem">
+          <span style="text-transform:capitalize">${modNames[s.module]||s.module}</span>
+          <span>${s.score}% ${'⭐'.repeat(s.stars)}</span>
+          <span style="opacity:.5;font-size:.75rem">${d.toLocaleDateString('en',{month:'short',day:'numeric'})}</span>
+        </div>`;
+      }).join('')||'<div style="opacity:.5;font-size:.85rem">No sessions yet</div>'}
     </div>
 
-    <div style="text-align:center;padding:20px 16px;">
-      <button class="cel-btn outline" onclick="logout()">Uitloggen</button>
-    </div>`;
+    <!-- Adjust daily goal -->
+    <div class="sandy-card">
+      <h3>⚙️ Settings</h3>
+      <label style="font-size:.85rem;display:block;margin-bottom:8px">Daily minimum goal (minutes):
+        <input id="goalInput" type="number" value="${minGoal}" min="30" max="300" step="10"
+          style="margin-left:8px;width:70px;padding:4px 8px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:.9rem">
+      </label>
+      <button class="btn-primary" onclick="saveGoal()" style="width:100%">Save Goal ✓</button>
+    </div>
 
-  document.getElementById('bramBody').innerHTML=html;
+    <!-- Send message -->
+    <div class="sandy-card">
+      <h3>💛 Send Devvrat a Message</h3>
+      <textarea id="sandyMsg" placeholder="Write an encouraging message..." rows="3"
+        style="width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#EDE8DC;font-size:.9rem;resize:vertical"></textarea>
+      <button class="btn-primary" onclick="sendMsg()" style="width:100%;margin-top:8px">Send Message 💌</button>
+      <div id="msgStatus" style="font-size:.8rem;margin-top:6px;opacity:.7"></div>
+    </div>
+
+  </div>`;
+
+  document.getElementById('sandyScreen').innerHTML=html;
 }
 
-function bramFlag(key,btn){
-  if(!progress.flags)progress.flags={};
-  progress.flags[key]=!progress.flags[key];
-  btn.textContent=progress.flags[key]?'🚩 Gemarkeerd':'🚩 Markeer';
-  btn.classList.toggle('flagged',progress.flags[key]);
-  saveProgress();
+function saveGoal(){
+  const v=parseInt(document.getElementById('goalInput').value||'120');
+  const dp=loadProgressByName('devvrat');
+  dp.minGoal=Math.max(30,Math.min(300,v));
+  saveProgressByName('devvrat',dp);
+  sfxTap();
+  // update ring if devvrat is current
+  if(currentUser&&currentUser.name==='devvrat') progress.minGoal=dp.minGoal;
+  const s=document.getElementById('goalInput');
+  if(s) s.style.outline='2px solid #4ADE80';
+  setTimeout(()=>{ if(s) s.style.outline=''; },1200);
 }
 
-// ══════════════════════════════════════════════
-// HELPERS
-// ══════════════════════════════════════════════
-function shuffle(arr){ return [...arr].sort(()=>Math.random()-.5); }
-
-// ── SOUND ──
-let _sfxCtx=null, _muted=localStorage.getItem('slimbo_mute')==='1';
-function _ctx(){if(!_sfxCtx)_sfxCtx=new(window.AudioContext||window.webkitAudioContext)();return _sfxCtx;}
-function _beep(freq,dur,type='sine',vol=0.2,delay=0){
-  if(_muted)return;
-  try{const c=_ctx(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(0,c.currentTime+delay);g.gain.linearRampToValueAtTime(vol,c.currentTime+delay+0.01);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+delay+dur);o.start(c.currentTime+delay);o.stop(c.currentTime+delay+dur+0.05);}catch(e){}
+function sendMsg(){
+  const ta=document.getElementById('sandyMsg');
+  const text=(ta.value||'').trim();
+  if(!text){ document.getElementById('msgStatus').textContent='Write something first!'; return; }
+  const all=getMsgs();
+  all.push({id:Date.now(),text,from:'Sandy',seen:false,ts:Date.now()});
+  saveMsgs(all);
+  sfxWindChime();
+  ta.value='';
+  document.getElementById('msgStatus').textContent='Message sent! 💛';
+  setTimeout(()=>{ document.getElementById('msgStatus').textContent=''; },2500);
 }
-function sfxCorrect(){_beep(523,.08);_beep(659,.08,undefined,undefined,.09);_beep(784,.15,undefined,undefined,.18);}
-function sfxWrong(){_beep(300,.12,'sawtooth',.12);_beep(220,.2,'sawtooth',.1,.14);}
-function sfxCongrats(){[523,659,784,1047,1319].forEach((f,i)=>_beep(f,.15,'sine',.15,i*.08));}
+
+// helper: load any user's progress by name string (for Sandy/Bram dashboards)
+function loadProgressByName(name){
+  const acct = ACCOUNTS.find(a=>a.name===name);
+  if(acct) return loadProgress(acct);
+  return {stars:{},streak:1,totalStars:0,todayDone:[],lastDate:'',sessions:[],dailyTime:{},todayMins:0,minGoal:120,tafelsMastered:[],flags:{}};
+}
+function saveProgressByName(name,data){
+  const acct = ACCOUNTS.find(a=>a.name===name);
+  if(acct) localStorage.setItem(pKey(acct), JSON.stringify(data));
+}
 </script>
-<script>if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));</script>
 </div><!-- /appShell -->
 </body>
 </html>
