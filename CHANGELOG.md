@@ -5,6 +5,28 @@ Format: [v{MAJOR}.{MINOR}.{PATCH}] — YYYY-MM-DD
 
 ---
 
+## [v1.6.0] — 2026-06-22
+### Added — Tafels adaptive memorization engine
+- Session never ends until all 10 facts (×1 through ×10) are individually mastered
+- **Mastery bar per fact:** 6 consecutive correct answers with no wrong in between — any wrong resets that fact's streak to 0
+- **Speed signal:** response time must trend down across the 6 (first 3 avg slower than last 3 avg), OR already consistently fast (avg < 2.5s, avg total < 4s)
+- Questions are always random; same fact never repeats back-to-back
+- **Streak dot grid** on every question screen shows all 10 facts with live progress:
+  - Gray = untouched
+  - Orange = streak 1–2
+  - Yellow = streak 3–4
+  - Teal = streak 5 (one away)
+  - Green = mastered ✓
+  - Active fact pulses pink and scales up
+  - Each non-mastered dot shows current streak count (e.g. "3/6")
+- Speed feedback label after every answer: ⚡ Bliksemsel / 🚀 Super snel / ✅ Goed tempo / 💪 Sneller volgende keer
+- "⭐ 7×8 gememoreerd!" flash when a fact crosses the mastery bar
+- Custom mastery celebration screen when all 10 facts cleared, with option to pick another table or go home
+- `factStreak(a,b)` helper tracks consecutive correct count from the tail of history
+- Session resume (`slimbo_resume_devvrat`) updated on every question render
+
+---
+
 ## [v1.5.0] — 2026-06-22
 ### Added
 - **Mid-session resume** — Devvrat's exact position is saved to localStorage (`slimbo_resume_devvrat`) after every question render
