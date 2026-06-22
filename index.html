@@ -475,6 +475,17 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 @keyframes stars-fly{0%{opacity:0;transform:translateY(20px)}50%{opacity:1}100%{opacity:0;transform:translateY(-40px)}}
 @keyframes confettiFall{0%{opacity:1;transform:translateY(-10px) rotate(0)}100%{opacity:0;transform:translateY(80vh) rotate(540deg)}}
 
+/* ── USER PICKER ── */
+.user-picker{display:flex;gap:10px;justify-content:center;margin:8px 0 16px;}
+.user-pick-btn{flex:1;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.12);
+  color:var(--text);border-radius:16px;padding:14px 8px;cursor:pointer;
+  font-family:"Space Grotesk",sans-serif;transition:all .15s;display:flex;
+  flex-direction:column;align-items:center;gap:6px;}
+.user-pick-btn:active{transform:scale(.95);}
+.user-pick-btn.selected{border-color:var(--orange);background:rgba(255,107,53,.15);}
+.user-pick-avatar{font-size:32px;}
+.user-pick-name{font-size:13px;font-weight:700;}
+
 /* ── PART 2 ADDITIONS ── */
 .btn-primary{width:100%;background:linear-gradient(135deg,var(--orange),var(--pink));color:#fff;
   border:none;border-radius:16px;padding:16px;font-size:16px;font-weight:800;cursor:pointer;
@@ -580,11 +591,25 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
   <div class="login-brand">Slimbo</div>
   <div class="login-tag">Leren is een superkracht! ⚡</div>
   <div class="login-card">
-    <label class="login-label" for="li_name">Naam</label>
-    <input class="login-input" id="li_name" type="text" placeholder="Jouw naam..."
-      autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+    <div class="login-label">Wie ben jij?</div>
+    <div class="user-picker" id="userPicker">
+      <button class="user-pick-btn" data-name="devvrat" onclick="pickUser('devvrat')">
+        <span class="user-pick-avatar">🧑‍🎓</span>
+        <span class="user-pick-name">Devvrat</span>
+      </button>
+      <button class="user-pick-btn" data-name="bram" onclick="pickUser('bram')">
+        <span class="user-pick-avatar">🔍</span>
+        <span class="user-pick-name">Bram</span>
+      </button>
+      <button class="user-pick-btn" data-name="sandy" onclick="pickUser('sandy')">
+        <span class="user-pick-avatar">👩</span>
+        <span class="user-pick-name">Sandy</span>
+      </button>
+    </div>
+    <input type="hidden" id="li_name">
     <label class="login-label" for="li_pin">PIN</label>
-    <input class="login-input" id="li_pin" type="password" inputmode="numeric" placeholder="••••" maxlength="6">
+    <input class="login-input" id="li_pin" type="password" inputmode="numeric" placeholder="••••" maxlength="6"
+      autocomplete="off">
     <button class="login-btn" onclick="handleLogin()">🚀 Laten we gaan!</button>
     <div class="login-err" id="loginErr"></div>
   </div>
@@ -1129,6 +1154,14 @@ document.addEventListener('keydown', e=>{
     else if(focused==='pinInput') checkSkipPin();
   }
 });
+function pickUser(name){
+  document.getElementById('li_name').value = name;
+  document.querySelectorAll('.user-pick-btn').forEach(b=>{
+    b.classList.toggle('selected', b.dataset.name===name);
+  });
+  document.getElementById('li_pin').focus();
+}
+
 function handleLogin(){
   const name = document.getElementById('li_name').value.trim().toLowerCase();
   const pin  = document.getElementById('li_pin').value.trim();
