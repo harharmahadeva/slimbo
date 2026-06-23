@@ -1854,16 +1854,49 @@ function genRekenSom(level){
   }
 }
 
-function getRekenExSteps(level){
-  const examples=[
-    // level 1
-    [{s:'We gebruiken de <strong>splitsmethode</strong>! 🔢',t:'Bijvoorbeeld: <strong>47 + 35</strong>'},{s:'Split de getallen:<br>47 = 40 + 7<br>35 = 30 + 5',t:'Schrift: breek elk getal in tientallen en eenheden.'},{s:'Tel tientallen op:<br>40 + 30 = <strong>70</strong>',t:'Dan eenheden:<br>7 + 5 = <strong>12</strong>'},{s:'70 + 12 = <strong>82</strong> 🎉',t:'Klaar! 47 + 35 = 82'}],
-    // level 2
-    [{s:'We gebruiken <strong>splitsen</strong> tot 500! 🔢',t:'Voorbeeld: <strong>234 + 158</strong>'},{s:'Split: 234 = 200+30+4<br>158 = 100+50+8',t:'Honderdtallen, tientallen, eenheden apart.'},{s:'100en: 200+100=<strong>300</strong><br>10en: 30+50=<strong>80</strong><br>1en: 4+8=<strong>12</strong>',t:'Tel alles op!'},{s:'300+80+12=<strong>392</strong> 🎉',t:'234 + 158 = 392'}],
-    // level 3
-    [{s:'Nu tot <strong>1000</strong>! 🚀',t:'Voorbeeld: <strong>645 + 278</strong>'},{s:'Split: 645=600+40+5<br>278=200+70+8',t:'Maak groepjes van 100, 10, 1.'},{s:'100en: 600+200=<strong>800</strong><br>10en: 40+70=<strong>110</strong><br>1en: 5+8=<strong>13</strong>',t:'Let op: 110 en 13 gaan we optellen!'},{s:'800+110+13=<strong>923</strong> 🎉',t:'645 + 278 = 923'}],
+function getRekenExCard(level){
+  const cards=[
+    // level 1 — tot 100
+    {range:'tot 100', uitleg:'Breek elk getal op in <strong>tientallen</strong> en <strong>eenheden</strong>, reken die apart uit, en tel de uitkomsten op.',
+     ex1:{som:'34 + 25', stap1:'34 = <strong>30</strong> + 4', stap2:'25 = <strong>20</strong> + 5', stap3:'30 + 20 = <strong>50</strong>', stap4:'4 + 5 = <strong>9</strong>', ant:'50 + 9 = <strong>59</strong> ✅'},
+     ex2:{som:'57 − 23', stap1:'57 = <strong>50</strong> + 7', stap2:'23 = <strong>20</strong> + 3', stap3:'50 − 20 = <strong>30</strong>', stap4:'7 − 3 = <strong>4</strong>', ant:'30 + 4 = <strong>34</strong> ✅'}},
+    // level 2 — tot 500
+    {range:'tot 500', uitleg:'Nu met <strong>honderdtallen</strong>, tientallen en eenheden — reken elke groep apart.',
+     ex1:{som:'134 + 225', stap1:'134 = <strong>100</strong> + 30 + 4', stap2:'225 = <strong>200</strong> + 20 + 5', stap3:'100+200=<strong>300</strong> · 30+20=<strong>50</strong>', stap4:'4+5=<strong>9</strong>', ant:'300 + 50 + 9 = <strong>359</strong> ✅'},
+     ex2:{som:'348 − 126', stap1:'348 = <strong>300</strong> + 40 + 8', stap2:'126 = <strong>100</strong> + 20 + 6', stap3:'300−100=<strong>200</strong> · 40−20=<strong>20</strong>', stap4:'8−6=<strong>2</strong>', ant:'200 + 20 + 2 = <strong>222</strong> ✅'}},
+    // level 3 — tot 1000
+    {range:'tot 1000', uitleg:'Splits in honderdtallen, tientallen en eenheden — let op als de eenheden groter dan 10 worden!',
+     ex1:{som:'456 + 327', stap1:'456 = <strong>400</strong> + 50 + 6', stap2:'327 = <strong>300</strong> + 20 + 7', stap3:'400+300=<strong>700</strong> · 50+20=<strong>70</strong>', stap4:'6+7=<strong>13</strong>', ant:'700 + 70 + 13 = <strong>783</strong> ✅'},
+     ex2:{som:'875 − 342', stap1:'875 = <strong>800</strong> + 70 + 5', stap2:'342 = <strong>300</strong> + 40 + 2', stap3:'800−300=<strong>500</strong> · 70−40=<strong>30</strong>', stap4:'5−2=<strong>3</strong>', ant:'500 + 30 + 3 = <strong>533</strong> ✅'}},
   ];
-  return examples[level-1];
+  return cards[level-1];
+}
+
+function rekenExHTML(c){
+  const ex=(e,icon)=>`
+    <div style="background:var(--card2);border-radius:14px;padding:14px 16px;margin-top:10px">
+      <div style="font-size:16px;font-weight:900;color:var(--yellow);margin-bottom:10px">${icon} ${e.som}</div>
+      <div style="display:flex;flex-direction:column;gap:5px;font-size:14px;line-height:1.7;color:var(--text2)">
+        <div>① ${e.stap1}</div>
+        <div>② ${e.stap2}</div>
+        <div>③ ${e.stap3}</div>
+        <div>④ ${e.stap4}</div>
+        <div style="margin-top:6px;font-size:16px;color:var(--green);font-weight:800">→ ${e.ant}</div>
+      </div>
+    </div>`;
+  return `
+    <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);text-align:center;margin-bottom:12px">
+      🔢 De Splitsmethode — rekenen ${c.range}
+    </div>
+    <div style="font-size:14px;color:var(--text2);line-height:1.7;padding:12px 14px;
+      background:rgba(91,196,245,.08);border-radius:12px;border-left:4px solid var(--blue);margin-bottom:4px">
+      ${c.uitleg}
+    </div>
+    ${ex(c.ex1,'➕')}
+    ${ex(c.ex2,'➖')}
+    <button class="btn-primary" onclick="moduleIdx++;renderQuestion()" style="width:100%;margin-top:18px">
+      Ik snap het! Start oefening →
+    </button>`;
 }
 
 // ── RENDER QUESTION ───────────────────────────────────────
@@ -1945,10 +1978,7 @@ function renderQuestion(){
     <div class="mc-opts">${q.keuzes.map((k,i)=>`<button class="mc-btn" onclick="answerLezen(${i},${q.correct})">${k}</button>`).join('')}</div>
     <div id="feedback" class="feedback hidden"></div>`;
   } else if(q.type==='rekenen_ex'){
-    exSteps=getRekenExSteps(q.level); exStep=0;
-    body.innerHTML=`<div class="teacher-intro">👩‍🏫 Eerst uitleggen hoe we rekenen!</div>
-    <div id="exStepDiv"><div class="teacher-bubble">${exSteps[0].s}</div><div class="ex-substep">${exSteps[0].t}</div></div>
-    <button class="btn-primary" onclick="nextRekenEx()">Volgende stap →</button>`;
+    body.innerHTML=rekenExHTML(getRekenExCard(q.level));
   } else if(q.type==='rekenen'){
     body.innerHTML=`<div class="reken-sum">${q.a} ${q.op} ${q.b} = ?</div>
     <input id="rekenInput" class="word-input" type="number" placeholder="Jouw antwoord..." inputmode="numeric">
@@ -1990,7 +2020,7 @@ function renderQuestion(){
         autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       <button class="btn-primary" onclick="answerDictee()" style="margin-top:8px">Controleren ✓</button>
       <div id="feedback" class="feedback hidden"></div>`;
-    setTimeout(()=>speakDicteeWord(), 600);
+    setTimeout(()=>speakDicteeWord(true), 600);
     setTimeout(()=>{ const i=document.getElementById('dicteeInput'); if(i) i.focus(); },1800);
     document.getElementById('dicteeInput').addEventListener('keyup',e=>{ if(e.key==='Enter') answerDictee(); });
   } else if(q.type==='raket'){
@@ -2069,13 +2099,17 @@ function answerDelen(chosen,correct){
 }
 function answerLezen(idx,correct){
   const ok=idx===correct;
-  showFeedback(ok, ok?'Juist! ✅ Goed gelezen!':'Niet helemaal, kijk nog eens naar de tekst. 💪');
+  const q=moduleQuestions[moduleIdx];
+  const correctLabel=q.keuzes[correct];
+  showFeedback(ok,
+    ok ? '✅ Juist! Goed gelezen!'
+       : `❌ Het juiste antwoord is: "<strong>${correctLabel}</strong>" — lees de tekst nog eens terug! 💪`);
   if(ok) moduleCorrect++;
   document.querySelectorAll('.mc-btn').forEach((b,i)=>{
     b.disabled=true;
     if(i===correct) b.style.background='#4ADE80'; else if(i===idx) b.style.background='#F87171';
   });
-  setTimeout(()=>{ moduleIdx++; renderQuestion(); },1800);
+  setTimeout(()=>{ moduleIdx++; renderQuestion(); },2200);
 }
 function answerTafels(chosen,correct){
   const ok=chosen===correct;
@@ -2097,13 +2131,25 @@ function answerRekenen(){
   setTimeout(()=>{ moduleIdx++; renderQuestion(); },1600);
 }
 
-function speakDicteeWord(){
+function speakDicteeWord(twice){
   const q=moduleQuestions[moduleIdx];
   if(!q || q.type!=='dictee') return;
   speechSynthesis.cancel();
-  const utt=new SpeechSynthesisUtterance(q.woord);
-  utt.lang='nl-NL'; utt.rate=0.8; utt.pitch=1;
-  speechSynthesis.speak(utt);
+  const say=()=>{
+    const utt=new SpeechSynthesisUtterance(q.woord);
+    utt.lang='nl-NL'; utt.rate=0.65; utt.pitch=1; utt.volume=1;
+    speechSynthesis.speak(utt);
+    if(twice){
+      utt.onend=()=>{
+        setTimeout(()=>{
+          const utt2=new SpeechSynthesisUtterance(q.woord);
+          utt2.lang='nl-NL'; utt2.rate=0.65; utt2.pitch=1; utt2.volume=1;
+          speechSynthesis.speak(utt2);
+        },800);
+      };
+    }
+  };
+  say();
   sfxTap();
 }
 
@@ -2471,7 +2517,7 @@ function showTafelsMastered(){
 // ── CELEBRATION ───────────────────────────────────────────
 function showCelebration(){
   clearResume();
-  const total=moduleQuestions.filter(q=>!['delen_ex','lezen_story','rekenen_ex','tafels_learn'].includes(q.type)).length;
+  const total=moduleQuestions.filter(q=>!['delen_ex','lezen_story','rekenen_ex','tafels_learn','spelling_intro'].includes(q.type)).length;
   const pct=total>0?Math.round(moduleCorrect/total*100):100;
   const stars=pct>=90?3:pct>=70?2:1;
 

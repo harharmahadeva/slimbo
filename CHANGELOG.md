@@ -5,6 +5,15 @@ Format: [v{MAJOR}.{MINOR}.{PATCH}] — YYYY-MM-DD
 
 ---
 
+## [v1.16.0] — 2026-06-23
+### Changed
+- **Dictee — louder & clearer audio**: rate slowed from 0.8 → 0.65, volume explicitly set to 1.0; word now spoken **twice** automatically on question load (800ms gap between repetitions) so student can hear it clearly
+- **Rekenen — multiple worked examples before quiz**: replaced single 4-step walkthrough with a static learn card showing the splitsmethode explained + **2 fully worked examples** (one ➕ addition and one ➖ subtraction) for each level; student taps "Ik snap het! Start oefening →" when ready
+- **Lezen — wrong-answer feedback now names the correct answer**: previously just said "kijk nog eens naar de tekst"; now shows `❌ Het juiste antwoord is: "..."` so student knows what the right answer was
+- **Celebration score**: `spelling_intro` step now excluded from question total (was inflating denominator by 1)
+
+---
+
 ## [v1.15.0] — 2026-06-23
 ### Fixed
 - **Service worker cache bust** — bumped cache key from `slimbo-v1` to `slimbo-v2`; old cached `index.html` was being served stale so users saw outdated versions of the app despite pushes to GitHub. New SW invalidates the old cache on activation and fetches fresh content.
