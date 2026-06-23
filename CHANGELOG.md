@@ -5,6 +5,14 @@ Format: [v{MAJOR}.{MINOR}.{PATCH}] — YYYY-MM-DD
 
 ---
 
+## [v1.14.0] — 2026-06-23
+### Changed
+- **Woordenschat — learn before test**: after tapping the module, all 6 words for that session are shown (emoji + woord + hint) before the scrambled-letter quiz begins. "✅ Ik ken ze! Start oefening →" advances to the quiz.
+- **Spelling d/t — rule intro before questions**: first step is now a rule card explaining ik-vorm (no d/t), hij/zij/het (stam+t), and 't kofschip (past tense rule) with colour-coded examples. "Begrepen! Start oefening →" advances to the 8 questions.
+- **Score/progress bar**: intro steps are excluded from the question counter and dot row so "1/9" never shows; intro step shows "Uitleg" instead.
+
+---
+
 ## [v1.13.0] — 2026-06-23
 ### Changed
 - **Tafels — learn before test**: after picking a table, a learn screen now appears showing all 10 facts (4×1=4 through 4×10=40) with a staggered slide-in animation before the adaptive quiz begins. "✅ Ik ken ze! Start oefenen →" button advances to the quiz. Back arrow returns to the table picker.

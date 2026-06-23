@@ -1761,21 +1761,60 @@ function startModule(id){
   moduleId=id; moduleIdx=0; moduleCorrect=0; exStep=0; exSteps=[];
   sfxModStart();
   if(id==='tafels'){ renderTafelPicker(); return; }
+  if(id==='woorden'){ renderWoordenLearn(); return; }
   buildQuestions(id);
   renderQuestion();
 }
 function retryModule(){ startModule(moduleId); }
 
+function renderWoordenLearn(){
+  const set=shuffle(WOORDEN_SETS).slice(0,6);
+  // store the chosen words so buildQuestions uses the same set
+  window._woordenSet = set;
+  const ex=document.getElementById('exerciseScreen');
+  const cards=set.map(w=>`
+    <div style="display:flex;align-items:center;gap:14px;padding:13px 16px;
+      background:var(--card2);border-radius:16px;border:1px solid var(--border);">
+      <div style="font-size:36px;flex-shrink:0">${w.emoji}</div>
+      <div>
+        <div style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;
+          color:var(--yellow);letter-spacing:-.3px">${w.word}</div>
+        <div style="font-size:13px;color:var(--text3);margin-top:2px">${w.hint}</div>
+      </div>
+    </div>`).join('');
+  ex.innerHTML=`
+    <div class="ex-header">
+      <button class="btn-icon" onclick="goHome()">←</button>
+      <div style="flex:1;text-align:center;font-family:'Outfit',sans-serif;font-weight:800;font-size:17px">Woordenschat 📚</div>
+      <div style="width:46px"></div>
+    </div>
+    <div class="ex-body" style="padding:16px">
+      <div style="text-align:center;font-size:13px;color:var(--text3);font-weight:700;
+        text-transform:uppercase;letter-spacing:.6px;margin-bottom:16px">
+        📖 Leer deze 6 woorden — dan ga je ze spellen!
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">${cards}</div>
+      <button class="btn-primary" onclick="startWoordenQuiz()" style="width:100%">
+        ✅ Ik ken ze! Start oefening →
+      </button>
+    </div>`;
+  showScreen('exerciseScreen');
+}
+function startWoordenQuiz(){
+  buildQuestions('woorden');
+  renderQuestion();
+}
+
 function buildQuestions(id){
   moduleQuestions=[];
   if(id==='woorden'){
-    const set=shuffle(WOORDEN_SETS).slice(0,6);
+    const set=window._woordenSet || shuffle(WOORDEN_SETS).slice(0,6);
     set.forEach(w=>{
-      // scramble letters
       const scrambled=shuffle(w.word.split('')).join('');
       moduleQuestions.push({type:'woorden',word:w.word,scrambled,hint:w.hint,emoji:w.emoji});
     });
   } else if(id==='spelling'){
+    moduleQuestions.push({type:'spelling_intro'});
     const set=shuffle(DT_OEFENINGEN).slice(0,8);
     set.forEach(o=>moduleQuestions.push({type:'spelling',...o}));
   } else if(id==='delen'){
@@ -1835,11 +1874,15 @@ function renderQuestion(){
   const ex=document.getElementById('exerciseScreen');
   ex.innerHTML='';
 
-  // header
+  // header — exclude intro steps from question count and dot row
+  const _introTypes=new Set(['spelling_intro']);
+  const _realQs=moduleQuestions.filter(q=>!_introTypes.has(q.type));
+  const _realIdx=moduleQuestions.slice(0,moduleIdx).filter(q=>!_introTypes.has(q.type)).length;
+  const _isIntro=_introTypes.has(q.type);
   ex.innerHTML=`<div class="ex-header">
     <button class="btn-icon" onclick="goHome()">🏠</button>
-    <div class="ex-progress">${moduleIdx+1}/${moduleQuestions.length}</div>
-    <div class="ex-dots">${moduleQuestions.map((_,i)=>`<span class="dot${i<moduleIdx?' done':i===moduleIdx?' active':''}" style="width:8px;height:8px;border-radius:50%;display:inline-block;margin:2px;background:${i<moduleIdx?'#A3E635':i===moduleIdx?'#FACC15':'rgba(255,255,255,.3)'}"></span>`).join('')}</div>
+    <div class="ex-progress">${_isIntro?'Uitleg':(_realIdx+1)+'/'+_realQs.length}</div>
+    <div class="ex-dots">${_realQs.map((_,i)=>`<span class="dot${i<_realIdx?' done':i===_realIdx?' active':''}" style="width:8px;height:8px;border-radius:50%;display:inline-block;margin:2px;background:${i<_realIdx?'#A3E635':i===_realIdx?'#FACC15':'rgba(255,255,255,.3)'}"></span>`).join('')}</div>
   </div><div class="ex-body" id="exBody"></div>`;
 
   const body=document.getElementById('exBody');
@@ -1854,6 +1897,28 @@ function renderQuestion(){
     <div id="feedback" class="feedback hidden"></div>`;
     setTimeout(()=>{ const i=document.getElementById('wordInput'); if(i) i.focus(); },200);
     document.getElementById('wordInput').addEventListener('keyup',e=>{ if(e.key==='Enter') answerWoord(); });
+  } else if(q.type==='spelling_intro'){
+    body.innerHTML=`
+      <div class="tafel-learn-card" style="text-align:left;padding:22px">
+        <div style="font-size:28px;text-align:center;margin-bottom:14px">✏️ De d/t regel</div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:15px;line-height:1.75">
+          <div style="background:rgba(91,196,245,.1);border-radius:12px;padding:12px 14px;border-left:4px solid var(--blue)">
+            <strong style="color:var(--blue)">ik-vorm</strong> → geen d of t<br>
+            <span style="color:var(--text2)">ik werk, ik pak, ik ga</span>
+          </div>
+          <div style="background:rgba(61,217,160,.1);border-radius:12px;padding:12px 14px;border-left:4px solid var(--green)">
+            <strong style="color:var(--green)">hij / zij / het → stam + t</strong><br>
+            <span style="color:var(--text2)">hij werkt, zij pakt, het gaat</span>
+          </div>
+          <div style="background:rgba(255,207,80,.1);border-radius:12px;padding:12px 14px;border-left:4px solid var(--yellow)">
+            <strong style="color:var(--yellow)">'t kofschip</strong> → voor verleden tijd<br>
+            <span style="color:var(--text2)">Stam eindigt op t·k·f·s·ch·p → schrijf <strong>-te/-ten</strong><br>Anders → schrijf <strong>-de/-den</strong></span>
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="moduleIdx++;renderQuestion()" style="width:100%;margin-top:16px">
+        Begrepen! Start oefening →
+      </button>`;
   } else if(q.type==='spelling'){
     body.innerHTML=`<div class="q-zin">${q.zin.replace('____','<span class="blank">____</span>')}</div>
     <div class="q-label">Kies het juiste woord:</div>
