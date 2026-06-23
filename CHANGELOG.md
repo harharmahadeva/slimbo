@@ -5,6 +5,12 @@ Format: [v{MAJOR}.{MINOR}.{PATCH}] — YYYY-MM-DD
 
 ---
 
+## [v1.15.0] — 2026-06-23
+### Fixed
+- **Service worker cache bust** — bumped cache key from `slimbo-v1` to `slimbo-v2`; old cached `index.html` was being served stale so users saw outdated versions of the app despite pushes to GitHub. New SW invalidates the old cache on activation and fetches fresh content.
+
+---
+
 ## [v1.14.0] — 2026-06-23
 ### Changed
 - **Woordenschat — learn before test**: after tapping the module, all 6 words for that session are shown (emoji + woord + hint) before the scrambled-letter quiz begins. "✅ Ik ken ze! Start oefening →" advances to the quiz.
