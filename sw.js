@@ -1,4 +1,4 @@
-const CACHE = 'slimbo-v3';
+const CACHE = 'slimbo-v4';
 const STATIC = ['/', '/index.html', '/icon.svg', '/manifest.json'];
 
 self.addEventListener('install', e => {
@@ -23,4 +23,25 @@ self.addEventListener('fetch', e => {
       return cached || fresh;
     })
   );
+});
+
+// ── PUSH NOTIFICATIONS ────────────────────────────────────
+self.addEventListener('push', e => {
+  let data = { title: 'Slimbo', body: 'Tijd om te leren! 📚' };
+  try { data = e.data.json(); } catch {}
+  e.waitUntil(
+    self.registration.showNotification(data.title, {
+      body:  data.body,
+      icon:  '/icon.svg',
+      badge: '/icon.svg',
+      tag:   data.tag || 'slimbo-reminder',
+      renotify: true,
+      data:  { url: '/' },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(clients.openWindow(e.notification.data?.url || '/'));
 });

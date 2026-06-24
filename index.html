@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Slimbo">
 <meta name="theme-color" content="#12111A">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self'; img-src 'self' data:; media-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://slimbo.vercel.app; img-src 'self' data:; media-src 'none'">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/icon.svg">
 <title>Slimbo</title>
@@ -1203,6 +1203,7 @@ function stopTimer(){
   if(timerInterval){ clearInterval(timerInterval); timerInterval=null; }
   sessionStartTs = null;
 }
+let _syncMinsTicker = 0;
 function addMins(n){
   if(n<=0) return;
   progress.todayMins = (progress.todayMins||0) + n;
@@ -1214,6 +1215,9 @@ function addMins(n){
   updateTimeDisplay();
   checkEyeBreak();
   checkBlinkReminder();
+  // sync studied minutes to server every 5 min so push notifications are accurate
+  _syncMinsTicker += n;
+  if(_syncMinsTicker >= 5){ _syncMinsTicker = 0; syncTodayMins(); }
 }
 function onTick(){
   if(!appVisible || !lastTickTs) return;
@@ -1461,6 +1465,7 @@ function handleLogin(){
   checkHourLock();
   showHome();
   startTimer();
+  subscribeToPush();
 }
 function logout(){
   stopTimer();
@@ -1563,7 +1568,49 @@ function dismissMsg(id){
 
 function goHome(){ showHome(); }
 
-// ── SERVICE WORKER ────────────────────────────────────────
+// ── SERVICE WORKER + PUSH ─────────────────────────────────
+const VAPID_PUBLIC_KEY = 'BFQbVwcAx4qzpryARh_fHGhcss9GEZzkvCXbT72UgtmYJpae8DLVpdVtjfs1Wz6lPL1MWefFr7QFog2dC6gs6dc';
+
+function urlBase64ToUint8Array(base64String){
+  const padding='='.repeat((4-base64String.length%4)%4);
+  const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(base64);
+  return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
+}
+
+async function subscribeToPush(){
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if(!sub){
+      const permission = await Notification.requestPermission();
+      if(permission !== 'granted') return;
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      });
+    }
+    // Send subscription to server
+    await fetch('/api/subscribe', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(sub),
+    });
+  } catch(e){ console.warn('Push subscription failed:', e); }
+}
+
+async function syncTodayMins(){
+  try {
+    const mins = progress?.todayMins || 0;
+    await fetch('/api/sync-mins', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ mins }),
+    });
+  } catch(e){}
+}
+
 if('serviceWorker' in navigator)
   window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
 

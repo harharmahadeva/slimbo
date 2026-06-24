@@ -5,7 +5,26 @@ Format: [v{MAJOR}.{MINOR}.{PATCH}] — YYYY-MM-DD
 
 ---
 
-## [v1.19.0] — 2026-06-24
+## [v1.20.0] — 2026-06-24
+### Added — Background push notifications (iPad)
+- **True push notifications** — Devvrat's iPad now receives study reminders even when the app is closed, via Web Push API (requires iOS 16.4+, PWA installed to home screen)
+- **Service worker push handler** — sw.js handles `push` events and `notificationclick` (tapping opens the app)
+- **3 daily reminders** via Vercel Cron (UTC times mapped to Amsterdam):
+  - 07:00 — "Goedemorgen! Tijd voor Slimbo 🚀"
+  - 15:00 — progress-aware: "nog X minuten te gaan 💪"
+  - 20:00 — final nudge, or "dagdoel bereikt! ⭐" if done
+- **`/api/subscribe`** — saves push subscription to Vercel KV when Devvrat logs in
+- **`/api/send-push`** — cron endpoint, reads subscription + today's minutes from KV, sends push via VAPID
+- **`/api/sync-mins`** — app posts studied minutes to KV every 5 min so push messages are accurate
+- **`vercel.json`** — cron schedule at 05:00, 13:00, 18:00 UTC (= 07:00, 15:00, 20:00 CEST)
+- **`package.json`** — adds `web-push` npm dependency for VAPID signing
+- SW bumped to `slimbo-v4`
+
+> **Setup required (one-time):** Add 4 environment variables in Vercel dashboard — see README for details.
+
+---
+
+## [v1.19.2] — 2026-06-24
 ### Added — Dagelijks Nederlands module
 - **New 🗣️ Dagelijks card** on home screen — teaches everyday Dutch vocabulary an 8-9 year old native Dutch child would know
 - **72 words across 8 themes**: Gevoelens, Thuis, Eten, Weer, Buiten, School, Familie, Vrije tijd, Dieren
