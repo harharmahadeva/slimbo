@@ -952,6 +952,13 @@ button{touch-action:manipulation;}
       <div class="mod-stars" id="mst-kleding">☆☆☆</div>
       <div class="mod-badge" id="mbg-kleding"></div>
     </div>
+    <div class="module-card mc-blue" onclick="startModule('dagelijks')" style="border-color:rgba(91,196,245,.5)">
+      <span class="mod-emoji">🗣️</span>
+      <div class="mod-name">Dagelijks</div>
+      <div class="mod-desc">Alledaagse woorden leren!</div>
+      <div class="mod-stars" id="mst-dagelijks">☆☆☆</div>
+      <div class="mod-badge" id="mbg-dagelijks"></div>
+    </div>
     <div class="module-card mc-red" onclick="startBonus()">
       <span class="mod-emoji">🚀</span>
       <div class="mod-name">Raket Race</div>
@@ -1480,11 +1487,11 @@ function showHome(){
   document.getElementById('statStreak').textContent   = '🔥 ' + (progress.streak||1);
 
   const done = (progress.todayDone||[]).length;
-  document.getElementById('statDone').textContent = done + '/8';
-  document.getElementById('heroSub').textContent  = done===6 ? 'Alle modules klaar! 🏆' : done===0 ? 'Wat ga je vandaag leren? 🎯' : 'Goed bezig! ' + done + '/6 klaar! 💪';
+  document.getElementById('statDone').textContent = done + '/9';
+  document.getElementById('heroSub').textContent  = done===9 ? 'Alle modules klaar! 🏆' : done===0 ? 'Wat ga je vandaag leren? 🎯' : 'Goed bezig! ' + done + '/9 klaar! 💪';
 
   // module star badges
-  ['woorden','spelling','delen','lezen','tafels','rekenen','dictee','kleding'].forEach(m=>{
+  ['woorden','spelling','delen','lezen','tafels','rekenen','dictee','kleding','dagelijks'].forEach(m=>{
     const s = progress.stars?.[m] || 0;
     const done2 = (progress.todayDone||[]).includes(m);
     document.getElementById('mst-'+m).textContent = [1,2,3].map(i=>i<=s?'⭐':'☆').join('');
@@ -1523,7 +1530,7 @@ function renderMsgBanners(){
       <button class="msg-dismiss" onclick="dismissMsg(${m.id})">×</button>
     </div>`).join('');
 }
-const MOD_LABELS={woorden:'Woordenschat 📚',spelling:'Spelling d/t ✏️',delen:'Delen ➗',lezen:'Lezen 📖',tafels:'Tafels ✖️',rekenen:'Rekenen 🔢',kleding:'Kleding 👕',dictee:'Dictee 📝'};
+const MOD_LABELS={woorden:'Woordenschat 📚',spelling:'Spelling d/t ✏️',delen:'Delen ➗',lezen:'Lezen 📖',tafels:'Tafels ✖️',rekenen:'Rekenen 🔢',kleding:'Kleding 👕',dictee:'Dictee 📝',dagelijks:'Dagelijks 🗣️'};
 
 function renderResumeBanner(){
   const wrap=document.getElementById('resumeBanner');
@@ -1585,6 +1592,90 @@ const KLEDING_SETS = [
   {word:'rok',          hint:'Draag je om je heupen',              emoji:'🩱'},
   {word:'laarzen',      hint:'Lange schoenen tot je knie',         emoji:'👢'},
   {word:'handschoenen', hint:'Beschermen je handen tegen de kou',  emoji:'🧤'},
+];
+
+const DAGELIJKS_SETS = [
+  // gevoelens
+  {word:'blij',        emoji:'😄', zin:'Ik ben blij want het is mijn verjaardag!',           theme:'Gevoelens'},
+  {word:'boos',        emoji:'😠', zin:'Ik ben boos omdat mijn broer mijn spullen pakt.',    theme:'Gevoelens'},
+  {word:'bang',        emoji:'😨', zin:'Ik ben bang in het donker.',                          theme:'Gevoelens'},
+  {word:'moe',         emoji:'😴', zin:'Na het sporten ben ik heel erg moe.',                 theme:'Gevoelens'},
+  {word:'trots',       emoji:'🥲', zin:'Ik ben trots dat ik een goed cijfer heb!',            theme:'Gevoelens'},
+  {word:'verlegen',    emoji:'🫣', zin:'Ze is verlegen voor de klas.',                        theme:'Gevoelens'},
+  {word:'verdrietig',  emoji:'😢', zin:'Hij is verdrietig omdat zijn hond ziek is.',          theme:'Gevoelens'},
+  {word:'zenuwachtig', emoji:'😬', zin:'Ik ben zenuwachtig voor de toets.',                   theme:'Gevoelens'},
+  // thuis
+  {word:'keuken',      emoji:'🍳', zin:'Mama kookt eten in de keuken.',                       theme:'Thuis'},
+  {word:'badkamer',    emoji:'🚿', zin:'Ik poets mijn tanden in de badkamer.',                theme:'Thuis'},
+  {word:'gordijn',     emoji:'🪟', zin:'We doen het gordijn dicht als we slapen.',            theme:'Thuis'},
+  {word:'sloffen',     emoji:'🥿', zin:'Ik doe mijn sloffen aan als ik thuiskom.',            theme:'Thuis'},
+  {word:'koelkast',    emoji:'🧊', zin:'Het sap staat in de koelkast.',                       theme:'Thuis'},
+  {word:'wasmachine',  emoji:'🫧', zin:'Mama doet de kleren in de wasmachine.',               theme:'Thuis'},
+  {word:'kussen',      emoji:'🛏️', zin:'Ik slaap met een groot zacht kussen.',                theme:'Thuis'},
+  {word:'vuilnisbak',  emoji:'🗑️', zin:'Gooi het papier in de vuilnisbak.',                   theme:'Thuis'},
+  // eten
+  {word:'hagelslag',   emoji:'🍫', zin:'Op zaterdag eet ik brood met hagelslag.',             theme:'Eten'},
+  {word:'stroopwafel', emoji:'🧇', zin:'Stroopwafel is een Nederlandse lekkernij.',           theme:'Eten'},
+  {word:'friet',       emoji:'🍟', zin:'Na het sporten eten we friet met mayonaise.',         theme:'Eten'},
+  {word:'appelsap',    emoji:'🍎', zin:'Mag ik een glas appelsap alsjeblieft?',               theme:'Eten'},
+  {word:'boterham',    emoji:'🥪', zin:'Ik neem een boterham mee naar school.',               theme:'Eten'},
+  {word:'pindakaas',   emoji:'🥜', zin:'Pindakaas op brood is mijn favoriet.',                theme:'Eten'},
+  {word:'soep',        emoji:'🍲', zin:'Als ik ziek ben drink ik warme soep.',                theme:'Eten'},
+  {word:'koekje',      emoji:'🍪', zin:'Na het eten krijg ik een koekje.',                    theme:'Eten'},
+  // weer
+  {word:'bewolkt',     emoji:'☁️', zin:'Het is bewolkt, ik zie de zon niet.',                 theme:'Weer'},
+  {word:'winderig',    emoji:'💨', zin:'Het is zo winderig dat mijn pet wegvliegt!',           theme:'Weer'},
+  {word:'ijskoud',     emoji:'🥶', zin:'Buiten is het ijskoud, trek een jas aan.',            theme:'Weer'},
+  {word:'miezerig',    emoji:'🌧️', zin:'Het is miezerig weer, een beetje regen.',             theme:'Weer'},
+  {word:'onweer',      emoji:'⛈️', zin:'Bij onweer blijf ik lekker binnen.',                  theme:'Weer'},
+  {word:'zonnig',      emoji:'☀️', zin:'Het is zonnig, laten we buiten spelen!',              theme:'Weer'},
+  {word:'regenboog',   emoji:'🌈', zin:'Na de regen zie ik een mooie regenboog.',             theme:'Weer'},
+  {word:'sneeuw',      emoji:'❄️', zin:'Als er sneeuw ligt ga ik sleeën.',                    theme:'Weer'},
+  // buiten
+  {word:'schommel',    emoji:'🛝', zin:'Ik schommel zo hoog als een vliegtuig!',              theme:'Buiten'},
+  {word:'fietspad',    emoji:'🚲', zin:'Fiets altijd op het fietspad.',                        theme:'Buiten'},
+  {word:'stoep',       emoji:'🛤️', zin:'Loop op de stoep, niet op de weg.',                   theme:'Buiten'},
+  {word:'zandbak',     emoji:'🏖️', zin:'We bouwen een kasteel in de zandbak.',                theme:'Buiten'},
+  {word:'klimrek',     emoji:'🧗', zin:'Op het klimrek ben ik de beste!',                     theme:'Buiten'},
+  {word:'voetbal',     emoji:'⚽', zin:'Na school spelen we voetbal in het park.',            theme:'Buiten'},
+  {word:'zebrapad',    emoji:'🦓', zin:'Steek over op het zebrapad.',                          theme:'Buiten'},
+  {word:'skateboard',  emoji:'🛹', zin:'Mijn broer rijdt op een skateboard.',                 theme:'Buiten'},
+  // school
+  {word:'pauze',       emoji:'🔔', zin:'In de pauze spelen we buiten.',                       theme:'School'},
+  {word:'juf',         emoji:'👩‍🏫', zin:'De juf legt de som uit op het bord.',               theme:'School'},
+  {word:'schrift',     emoji:'📓', zin:'Ik schrijf mijn opdracht in mijn schrift.',           theme:'School'},
+  {word:'gymsaal',     emoji:'🏃', zin:'Op maandag gaan we naar de gymsaal.',                 theme:'School'},
+  {word:'kantine',     emoji:'🍽️', zin:'We eten in de kantine op vrijdag.',                   theme:'School'},
+  {word:'meester',     emoji:'👨‍🏫', zin:'De meester laat ons een film zien.',                 theme:'School'},
+  {word:'rapport',     emoji:'📋', zin:'Ik heb een goed rapport gehaald!',                    theme:'School'},
+  {word:'rugzak',      emoji:'🎒', zin:'Mijn rugzak is veel te zwaar vandaag.',               theme:'School'},
+  // familie
+  {word:'opa',         emoji:'👴', zin:'Opa vertelt altijd spannende verhalen.',               theme:'Familie'},
+  {word:'oma',         emoji:'👵', zin:'Bij oma eet ik altijd appeltaart.',                    theme:'Familie'},
+  {word:'neef',        emoji:'🧒', zin:'Mijn neef is een jaar jonger dan ik.',                 theme:'Familie'},
+  {word:'nicht',       emoji:'👧', zin:'Mijn nicht woont in Amsterdam.',                       theme:'Familie'},
+  {word:'tante',       emoji:'👩', zin:'Mijn tante brengt altijd cadeautjes mee.',             theme:'Familie'},
+  {word:'oom',         emoji:'👨', zin:'Oom rijdt in een grote auto.',                         theme:'Familie'},
+  {word:'tweeling',    emoji:'👯', zin:'Mijn vrienden zijn een tweeling.',                     theme:'Familie'},
+  {word:'baby',        emoji:'👶', zin:'De baby huilt omdat hij honger heeft.',                theme:'Familie'},
+  // vrije tijd
+  {word:'tekenen',     emoji:'🎨', zin:'Ik teken graag stripfiguren na school.',               theme:'Vrije tijd'},
+  {word:'kletsen',     emoji:'💬', zin:'We kletsen de hele pauze over films.',                 theme:'Vrije tijd'},
+  {word:'gamen',       emoji:'🎮', zin:'Op vrijdagavond mag ik gamen.',                        theme:'Vrije tijd'},
+  {word:'chillen',     emoji:'😎', zin:'In het weekend kan ik lekker chillen.',                theme:'Vrije tijd'},
+  {word:'zwemmen',     emoji:'🏊', zin:'Op zaterdag ga ik zwemmen met papa.',                  theme:'Vrije tijd'},
+  {word:'dansen',      emoji:'💃', zin:'Op muziek beginnen we te dansen.',                     theme:'Vrije tijd'},
+  {word:'lezen',       emoji:'📚', zin:'Voor het slapen lees ik een hoofdstuk.',               theme:'Vrije tijd'},
+  {word:'fietsen',     emoji:'🚵', zin:'We gaan fietsen langs de rivier.',                     theme:'Vrije tijd'},
+  // dieren
+  {word:'hamster',     emoji:'🐹', zin:'Mijn hamster rent de hele nacht in zijn wiel.',        theme:'Dieren'},
+  {word:'papegaai',    emoji:'🦜', zin:'De papegaai zegt "hallo" elke dag!',                  theme:'Dieren'},
+  {word:'konijn',      emoji:'🐰', zin:'Mijn konijn eet graag wortels.',                       theme:'Dieren'},
+  {word:'goudvis',     emoji:'🐟', zin:'De goudvis zwemt rondje in zijn kom.',                 theme:'Dieren'},
+  {word:'hond',        emoji:'🐶', zin:'Onze hond kwispelt als ik thuiskom.',                  theme:'Dieren'},
+  {word:'kat',         emoji:'🐱', zin:'De kat slaapt de hele dag op de bank.',                theme:'Dieren'},
+  {word:'paard',       emoji:'🐴', zin:'In de manege leer ik paardrijden.',                    theme:'Dieren'},
+  {word:'schildpad',   emoji:'🐢', zin:'De schildpad loopt heel langzaam.',                    theme:'Dieren'},
 ];
 
 const WOORDEN_SETS = [
@@ -1787,6 +1878,7 @@ function startModule(id){
   sfxModStart();
   if(id==='tafels'){ renderTafelPicker(); return; }
   if(id==='woorden'||id==='kleding'){ renderWoordenLearn(id); return; }
+  if(id==='dagelijks'){ renderDagelijksLearn(); return; }
   buildQuestions(id);
   renderQuestion();
 }
@@ -1836,6 +1928,62 @@ function startWoordenQuiz(){
   renderQuestion();
 }
 
+function renderDagelijksLearn(){
+  const set=shuffle(DAGELIJKS_SETS).slice(0,6);
+  window._dagelijksSet=set;
+  const theme=set[0].theme;
+  const ex=document.getElementById('exerciseScreen');
+  const cards=set.map((w,i)=>`
+    <div style="display:flex;align-items:center;gap:14px;padding:13px 16px;
+      background:var(--card2);border-radius:16px;border:1px solid var(--border);cursor:pointer"
+      onclick="speakDagelijks('${w.word.replace(/'/g,"\\'")}')">
+      <div style="font-size:36px;flex-shrink:0">${w.emoji}</div>
+      <div style="flex:1">
+        <div style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;
+          color:var(--blue);letter-spacing:-.3px">${w.word}</div>
+        <div style="font-size:13px;color:var(--text3);margin-top:2px;font-style:italic">${w.zin}</div>
+      </div>
+      <div style="font-size:20px;opacity:.5">🔊</div>
+    </div>`).join('');
+  ex.innerHTML=`
+    <div class="ex-header">
+      <button class="btn-icon" onclick="goHome()">←</button>
+      <div style="flex:1;text-align:center;font-family:'Outfit',sans-serif;font-weight:800;font-size:17px">Dagelijks 🗣️</div>
+      <div style="width:46px"></div>
+    </div>
+    <div class="ex-body" style="padding:16px">
+      <div style="text-align:center;font-size:13px;color:var(--text3);font-weight:700;
+        text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">
+        🗣️ Tik een woord om het te horen!
+      </div>
+      <div style="text-align:center;font-size:12px;color:var(--text3);margin-bottom:14px">Leer deze 6 woorden van het dagelijks leven</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">${cards}</div>
+      <button class="btn-primary" onclick="startDagelijksQuiz()" style="width:100%">
+        ✅ Ik ken ze! Start oefening →
+      </button>
+      <button class="btn-secondary" onclick="renderDagelijksLearn()"
+        style="width:100%;margin-top:10px;background:transparent;border:1px solid var(--border);color:var(--text3)">
+        🔄 Andere woorden
+      </button>
+    </div>`;
+  showScreen('exerciseScreen');
+  // auto-speak first word
+  setTimeout(()=>speakDagelijks(set[0].word),700);
+}
+
+function speakDagelijks(word){
+  speechSynthesis.cancel();
+  const utt=new SpeechSynthesisUtterance(word);
+  utt.lang='nl-NL'; utt.rate=0.75; utt.pitch=1; utt.volume=1;
+  speechSynthesis.speak(utt);
+  sfxTap();
+}
+
+function startDagelijksQuiz(){
+  buildQuestions('dagelijks');
+  renderQuestion();
+}
+
 function buildQuestions(id){
   moduleQuestions=[];
   if(id==='woorden'||id==='kleding'){
@@ -1870,6 +2018,15 @@ function buildQuestions(id){
   } else if(id==='dictee'){
     shuffle(DICTEE_ZINNEN).slice(0,10).forEach(d=>
       moduleQuestions.push({type:'dictee',...d}));
+  } else if(id==='dagelijks'){
+    const set=window._dagelijksSet||shuffle(DAGELIJKS_SETS).slice(0,6);
+    // alternating: mc, type, mc, type, mc, type
+    set.forEach((w,i)=>{
+      const distractors=shuffle(set.filter((_,j)=>j!==i)).slice(0,3);
+      const opts=shuffle([w,...distractors]);
+      if(i%2===0) moduleQuestions.push({type:'dutch_mc',word:w.word,emoji:w.emoji,zin:w.zin,opts:opts.map(o=>o.word),correct:opts.findIndex(o=>o.word===w.word)});
+      else         moduleQuestions.push({type:'dutch_type',word:w.word,emoji:w.emoji,zin:w.zin});
+    });
   }
 }
 
@@ -2055,6 +2212,31 @@ function renderQuestion(){
     setTimeout(()=>speakDicteeWord(true), 600);
     setTimeout(()=>{ const i=document.getElementById('dicteeInput'); if(i) i.focus(); },1800);
     document.getElementById('dicteeInput').addEventListener('keyup',e=>{ if(e.key==='Enter') answerDictee(); });
+  } else if(q.type==='dutch_mc'){
+    body.innerHTML=`
+      <div style="text-align:center;font-size:13px;color:var(--text3);margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">🔊 Luister en kies het juiste woord</div>
+      <button class="btn-primary" onclick="speakDagelijks('${q.word.replace(/'/g,"\\'")}');sfxTap()"
+        style="background:linear-gradient(135deg,var(--blue),var(--purple));margin-bottom:20px;width:100%">
+        🔊 Hoor het woord
+      </button>
+      <div class="mc-opts">${q.opts.map((o,i)=>`<button class="mc-btn" onclick="answerDagelijksMC(${i},${q.correct})">${o}</button>`).join('')}</div>
+      <div id="feedback" class="feedback hidden"></div>`;
+    setTimeout(()=>speakDagelijks(q.word),400);
+  } else if(q.type==='dutch_type'){
+    body.innerHTML=`
+      <div style="font-size:72px;text-align:center;margin:0 0 8px">${q.emoji}</div>
+      <div style="font-size:13px;text-align:center;color:var(--text3);font-style:italic;margin-bottom:16px">${q.zin.replace(q.word,'<strong style="color:var(--blue)">???</strong>')}</div>
+      <button class="btn-primary" onclick="speakDagelijks('${q.word.replace(/'/g,"\\'")}');sfxTap()"
+        style="background:linear-gradient(135deg,var(--blue),var(--purple));margin-bottom:14px;width:100%">
+        🔊 Hoor het woord
+      </button>
+      <input id="dagInput" class="word-input" type="text" placeholder="Schrijf het woord..."
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <button class="btn-primary" onclick="answerDagelijksType()" style="margin-top:8px">Controleren ✓</button>
+      <div id="feedback" class="feedback hidden"></div>`;
+    setTimeout(()=>speakDagelijks(q.word),400);
+    setTimeout(()=>{ const i=document.getElementById('dagInput'); if(i) i.focus(); },1200);
+    document.getElementById('dagInput').addEventListener('keyup',e=>{ if(e.key==='Enter') answerDagelijksType(); });
   } else if(q.type==='raket'){
     // use data-idx to avoid quote-escaping issues with string option values
     body.innerHTML=`
@@ -2200,6 +2382,31 @@ function answerDictee(){
        : `❌ Het woord is: "${q.woord}"  (jij schreef: "${val}")  →  ${sentence}`);
   if(ok) moduleCorrect++;
   setTimeout(()=>{ moduleIdx++; renderQuestion(); }, ok?1800:2800);
+}
+
+function answerDagelijksMC(chosen,correct){
+  const q=moduleQuestions[moduleIdx];
+  const ok=chosen===correct;
+  if(ok){ sfxCorrect(); moduleCorrect++; }
+  else { sfxWrong(); }
+  speakDagelijks(q.word);
+  showFeedback(ok,
+    ok ? `✅ "${q.word}" — goed! 🎉`
+       : `❌ Het juiste woord is: "${q.word}"`);
+  setTimeout(()=>{ moduleIdx++; renderQuestion(); }, ok?1600:2400);
+}
+
+function answerDagelijksType(){
+  const q=moduleQuestions[moduleIdx];
+  const val=(document.getElementById('dagInput').value||'').trim().toLowerCase();
+  const ok=val===q.word.toLowerCase();
+  if(ok){ sfxCorrect(); moduleCorrect++; }
+  else { sfxWrong(); }
+  speakDagelijks(q.word);
+  showFeedback(ok,
+    ok ? `✅ "${q.word}" — perfect gespeld! 🎉`
+       : `❌ Het woord is: "${q.word}"  (jij schreef: "${val}")`);
+  setTimeout(()=>{ moduleIdx++; renderQuestion(); }, ok?1600:2400);
 }
 
 // ── RAKET RACE ────────────────────────────────────────────
@@ -2549,7 +2756,7 @@ function showTafelsMastered(){
 // ── CELEBRATION ───────────────────────────────────────────
 function showCelebration(){
   clearResume();
-  const total=moduleQuestions.filter(q=>!['delen_ex','lezen_story','rekenen_ex','tafels_learn','spelling_intro'].includes(q.type)).length;
+  const total=moduleQuestions.filter(q=>!['delen_ex','lezen_story','rekenen_ex','tafels_learn','spelling_intro','dutch_learn'].includes(q.type)).length;
   const pct=total>0?Math.round(moduleCorrect/total*100):100;
   const stars=pct>=90?3:pct>=70?2:1;
 
@@ -2604,6 +2811,7 @@ function renderBram(tab){
     {id:'voortgang', label:'📊 Voortgang'},
     {id:'woorden',   label:'📚 Woorden'},
     {id:'kleding',   label:'👕 Kleding'},
+    {id:'dagelijks', label:'🗣️ Dagelijks'},
     {id:'spelling',  label:'✏️ Spelling d/t'},
     {id:'lezen',     label:'📖 Lezen'},
     {id:'dictee',    label:'📝 Dictee'},
@@ -2663,7 +2871,7 @@ function renderBram(tab){
     </div>
     <div class="sandy-card">
       <h3>🗂 Per module</h3>
-      ${['woorden','kleding','spelling','delen','lezen','tafels','rekenen','dictee'].map(m=>{
+      ${['woorden','kleding','dagelijks','spelling','delen','lezen','tafels','rekenen','dictee'].map(m=>{
         const s=dp.stars?.[m]||0;
         const ms=(dp.sessions||[]).filter(x=>x.module===m);
         const avg=ms.length?Math.round(ms.reduce((a,x)=>a+x.score,0)/ms.length):null;
@@ -2700,6 +2908,18 @@ function renderBram(tab){
       ${KLEDING_SETS.map((w,i)=>bramItem('kl_'+i,
         `${w.emoji} ${w.word}`,
         `Hint: ${w.hint}`)).join('')}
+    </div>`;
+
+  } else if(tab==='dagelijks'){
+    const byTheme={};
+    DAGELIJKS_SETS.forEach((w,i)=>{ if(!byTheme[w.theme]) byTheme[w.theme]=[]; byTheme[w.theme].push({...w,_i:i}); });
+    body=`<div class="sandy-card"><h3>🗣️ Dagelijks Nederlands — ${DAGELIJKS_SETS.length} woorden</h3>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:12px">Alledaagse woorden die Devvrat leert via luisteren en typen.</p>
+      ${Object.entries(byTheme).map(([theme,words])=>`
+        <div style="margin-bottom:14px">
+          <div style="font-size:13px;font-weight:800;color:var(--blue);margin-bottom:6px">${theme}</div>
+          ${words.map(w=>bramItem('dg_'+w._i,`${w.emoji} ${w.word}`,`"${w.zin}"`)).join('')}
+        </div>`).join('')}
     </div>`;
 
   } else if(tab==='spelling'){
@@ -2805,8 +3025,8 @@ function renderSandy(){
   const minGoal=dp.minGoal||120;
 
   // compute per-module stats
-  const modules=['woorden','spelling','delen','lezen','tafels','rekenen','dictee','kleding'];
-  const modNames={woorden:'Vocabulary',spelling:'Spelling d/t',delen:'Division',lezen:'Reading',tafels:'Times Tables',rekenen:'Arithmetic',dictee:'Dictation',kleding:'Clothing'};
+  const modules=['woorden','spelling','delen','lezen','tafels','rekenen','dictee','kleding','dagelijks'];
+  const modNames={woorden:'Vocabulary',spelling:'Spelling d/t',delen:'Division',lezen:'Reading',tafels:'Times Tables',rekenen:'Arithmetic',dictee:'Dictation',kleding:'Clothing',dagelijks:'Daily Dutch'};
   const modStats={};
   modules.forEach(m=>{
     const ms=allSessions.filter(s=>s.module===m);

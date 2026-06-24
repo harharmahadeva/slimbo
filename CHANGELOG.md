@@ -5,6 +5,21 @@ Format: [v{MAJOR}.{MINOR}.{PATCH}] — YYYY-MM-DD
 
 ---
 
+## [v1.19.0] — 2026-06-24
+### Added — Dagelijks Nederlands module
+- **New 🗣️ Dagelijks card** on home screen — teaches everyday Dutch vocabulary an 8-9 year old native Dutch child would know
+- **72 words across 8 themes**: Gevoelens, Thuis, Eten, Weer, Buiten, School, Familie, Vrije tijd, Dieren
+- **Learn-first flow**: 6 randomly selected words shown with emoji + real-life example sentence; tap any word to hear it spoken (TTS, nl-NL); first word auto-plays on load
+- **Practice modes** — alternating per session:
+  - 🔊 **Luisteren + Kiezen**: word spoken via TTS, choose from 4 options (all from the learned set)
+  - ✏️ **Luisteren + Typen**: emoji + gapped sentence shown, type the word you hear
+- **"🔄 Andere woorden"** button on learn screen to reshuffle a new random set of 6
+- **Full Bram dashboard tab** — 🗣️ Dagelijks tab shows all 72 words grouped by theme, each with flag + note
+- **Sandy dashboard** — dagelijks added to per-module progress bars and session history
+- **Service worker** bumped to `slimbo-v3` to force cache refresh
+
+---
+
 ## [v1.18.0] — 2026-06-24
 ### Changed — Bram full teacher dashboard
 - **Complete content review access** — Bram can now browse all content across every module via tabs: Voortgang · Woordenschat · Kleding · Spelling d/t · Lezen · Dictee · Delen

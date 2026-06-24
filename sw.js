@@ -1,4 +1,4 @@
-const CACHE = 'slimbo-v2';
+const CACHE = 'slimbo-v3';
 const STATIC = ['/', '/index.html', '/icon.svg', '/manifest.json'];
 
 self.addEventListener('install', e => {
