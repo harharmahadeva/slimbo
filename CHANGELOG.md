@@ -5,6 +5,18 @@ Format: [v{MAJOR}.{MINOR}.{PATCH}] — YYYY-MM-DD
 
 ---
 
+## [v1.17.0] — 2026-06-24
+### Added
+- **Kleding module** 👕 — new themed vocabulary module matching Devvrat's current school theme (De Arabesk, Arnhem)
+- 15 clothing words: jas, broek, schoen, sokken, jurk, trui, muts, sjaal, pyjama, regenjas, riem, overhemd, rok, laarzen, handschoenen — each with emoji + Dutch hint
+- Same learn-first flow as Woordenschat: all 6 words shown with emoji before the scramble quiz starts
+- "🔄 Andere woorden" button on the learn screen to reshuffle a different set of 6
+- Stars, today-done badge, and resume all work the same as other modules
+- Kleding added to Sandy and Bram dashboards (module results + performance stats)
+- Module counter on home updated from `/6` → `/8` to reflect 8 learnable modules
+
+---
+
 ## [v1.16.0] — 2026-06-23
 ### Changed
 - **Dictee — louder & clearer audio**: rate slowed from 0.8 → 0.65, volume explicitly set to 1.0; word now spoken **twice** automatically on question load (800ms gap between repetitions) so student can hear it clearly

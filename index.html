@@ -945,6 +945,13 @@ button{touch-action:manipulation;}
       <div class="mod-stars" id="mst-dictee">☆☆☆</div>
       <div class="mod-badge" id="mbg-dictee"></div>
     </div>
+    <div class="module-card mc-teal" onclick="startModule('kleding')" style="border-color:rgba(47,212,192,.5)">
+      <span class="mod-emoji">👕</span>
+      <div class="mod-name">Kleding</div>
+      <div class="mod-desc">Thema: kleding woorden!</div>
+      <div class="mod-stars" id="mst-kleding">☆☆☆</div>
+      <div class="mod-badge" id="mbg-kleding"></div>
+    </div>
     <div class="module-card mc-red" onclick="startBonus()">
       <span class="mod-emoji">🚀</span>
       <div class="mod-name">Raket Race</div>
@@ -1473,11 +1480,11 @@ function showHome(){
   document.getElementById('statStreak').textContent   = '🔥 ' + (progress.streak||1);
 
   const done = (progress.todayDone||[]).length;
-  document.getElementById('statDone').textContent = done + '/6';
+  document.getElementById('statDone').textContent = done + '/8';
   document.getElementById('heroSub').textContent  = done===6 ? 'Alle modules klaar! 🏆' : done===0 ? 'Wat ga je vandaag leren? 🎯' : 'Goed bezig! ' + done + '/6 klaar! 💪';
 
   // module star badges
-  ['woorden','spelling','delen','lezen','tafels','rekenen','dictee'].forEach(m=>{
+  ['woorden','spelling','delen','lezen','tafels','rekenen','dictee','kleding'].forEach(m=>{
     const s = progress.stars?.[m] || 0;
     const done2 = (progress.todayDone||[]).includes(m);
     document.getElementById('mst-'+m).textContent = [1,2,3].map(i=>i<=s?'⭐':'☆').join('');
@@ -1516,7 +1523,7 @@ function renderMsgBanners(){
       <button class="msg-dismiss" onclick="dismissMsg(${m.id})">×</button>
     </div>`).join('');
 }
-const MOD_LABELS={woorden:'Woordenschat 📚',spelling:'Spelling d/t ✏️',delen:'Delen ➗',lezen:'Lezen 📖',tafels:'Tafels ✖️',rekenen:'Rekenen 🔢'};
+const MOD_LABELS={woorden:'Woordenschat 📚',spelling:'Spelling d/t ✏️',delen:'Delen ➗',lezen:'Lezen 📖',tafels:'Tafels ✖️',rekenen:'Rekenen 🔢',kleding:'Kleding 👕',dictee:'Dictee 📝'};
 
 function renderResumeBanner(){
   const wrap=document.getElementById('resumeBanner');
@@ -1562,6 +1569,24 @@ function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){ const j=
 function rnd(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
 // ── CONTENT DATA ──────────────────────────────────────────
+const KLEDING_SETS = [
+  {word:'jas',          hint:'Draag je als het koud is',           emoji:'🧥'},
+  {word:'broek',        hint:'Draag je om je benen',               emoji:'👖'},
+  {word:'schoen',       hint:'Draag je aan je voet',               emoji:'👟'},
+  {word:'sokken',       hint:'Gaan onder je schoenen',             emoji:'🧦'},
+  {word:'jurk',         hint:'Rok en top in één kledingstuk',      emoji:'👗'},
+  {word:'trui',         hint:'Warm kledingstuk voor je bovenlijf', emoji:'🧶'},
+  {word:'muts',         hint:'Draag je op je hoofd in de winter',  emoji:'🧢'},
+  {word:'sjaal',        hint:'Draag je om je nek als het koud is', emoji:'🧣'},
+  {word:'pyjama',       hint:'Draag je als je gaat slapen',        emoji:'🌙'},
+  {word:'regenjas',     hint:'Draag je zodat je niet nat wordt',   emoji:'☔'},
+  {word:'riem',         hint:'Houdt je broek omhoog',              emoji:'🪢'},
+  {word:'overhemd',     hint:'Kledingstuk met knopen vooraan',     emoji:'👔'},
+  {word:'rok',          hint:'Draag je om je heupen',              emoji:'🩱'},
+  {word:'laarzen',      hint:'Lange schoenen tot je knie',         emoji:'👢'},
+  {word:'handschoenen', hint:'Beschermen je handen tegen de kou',  emoji:'🧤'},
+];
+
 const WOORDEN_SETS = [
   {word:'bibliotheek', hint:'Je leent er boeken', emoji:'📚'},
   {word:'vliegtuig',   hint:'Vliegt in de lucht', emoji:'✈️'},
@@ -1761,16 +1786,18 @@ function startModule(id){
   moduleId=id; moduleIdx=0; moduleCorrect=0; exStep=0; exSteps=[];
   sfxModStart();
   if(id==='tafels'){ renderTafelPicker(); return; }
-  if(id==='woorden'){ renderWoordenLearn(); return; }
+  if(id==='woorden'||id==='kleding'){ renderWoordenLearn(id); return; }
   buildQuestions(id);
   renderQuestion();
 }
 function retryModule(){ startModule(moduleId); }
 
-function renderWoordenLearn(){
-  const set=shuffle(WOORDEN_SETS).slice(0,6);
-  // store the chosen words so buildQuestions uses the same set
+function renderWoordenLearn(id){
+  id=id||'woorden';
+  const pool=id==='kleding'?KLEDING_SETS:WOORDEN_SETS;
+  const set=shuffle(pool).slice(0,6);
   window._woordenSet = set;
+  window._woordenId  = id;
   const ex=document.getElementById('exerciseScreen');
   const cards=set.map(w=>`
     <div style="display:flex;align-items:center;gap:14px;padding:13px 16px;
@@ -1797,18 +1824,23 @@ function renderWoordenLearn(){
       <button class="btn-primary" onclick="startWoordenQuiz()" style="width:100%">
         ✅ Ik ken ze! Start oefening →
       </button>
+      <button class="btn-secondary" onclick="renderWoordenLearn(window._woordenId)"
+        style="width:100%;margin-top:10px;background:transparent;border:1px solid var(--border);color:var(--text3)">
+        🔄 Andere woorden
+      </button>
     </div>`;
   showScreen('exerciseScreen');
 }
 function startWoordenQuiz(){
-  buildQuestions('woorden');
+  buildQuestions(window._woordenId||'woorden');
   renderQuestion();
 }
 
 function buildQuestions(id){
   moduleQuestions=[];
-  if(id==='woorden'){
-    const set=window._woordenSet || shuffle(WOORDEN_SETS).slice(0,6);
+  if(id==='woorden'||id==='kleding'){
+    const pool=id==='kleding'?KLEDING_SETS:WOORDEN_SETS;
+    const set=window._woordenSet || shuffle(pool).slice(0,6);
     set.forEach(w=>{
       const scrambled=shuffle(w.word.split('')).join('');
       moduleQuestions.push({type:'woorden',word:w.word,scrambled,hint:w.hint,emoji:w.emoji});
@@ -2577,7 +2609,7 @@ function renderBram(){
     </div>
     <div class="sandy-card">
       <h3>🗂 Module resultaten</h3>`;
-  ['woorden','spelling','delen','lezen','tafels','rekenen'].forEach(m=>{
+  ['woorden','spelling','delen','lezen','tafels','rekenen','dictee','kleding'].forEach(m=>{
     const s=dp.stars?.[m]||0;
     const mSessions=(dp.sessions||[]).filter(x=>x.module===m);
     const avgScore=mSessions.length?Math.round(mSessions.reduce((a,x)=>a+x.score,0)/mSessions.length):null;
@@ -2619,8 +2651,8 @@ function renderSandy(){
   const minGoal=dp.minGoal||120;
 
   // compute per-module stats
-  const modules=['woorden','spelling','delen','lezen','tafels','rekenen'];
-  const modNames={woorden:'Vocabulary',spelling:'Spelling d/t',delen:'Division',lezen:'Reading',tafels:'Times Tables',rekenen:'Arithmetic'};
+  const modules=['woorden','spelling','delen','lezen','tafels','rekenen','dictee','kleding'];
+  const modNames={woorden:'Vocabulary',spelling:'Spelling d/t',delen:'Division',lezen:'Reading',tafels:'Times Tables',rekenen:'Arithmetic',dictee:'Dictation',kleding:'Clothing'};
   const modStats={};
   modules.forEach(m=>{
     const ms=allSessions.filter(s=>s.module===m);
