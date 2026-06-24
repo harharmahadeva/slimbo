@@ -2005,7 +2005,7 @@ function renderDagelijksLearn(){
 function speakDagelijks(word){
   speechSynthesis.cancel();
   const utt=new SpeechSynthesisUtterance(word);
-  utt.lang='nl-NL'; utt.rate=0.75; utt.pitch=1; utt.volume=1;
+  utt.lang='nl-NL'; utt.rate=0.6; utt.pitch=1; utt.volume=1;
   speechSynthesis.speak(utt);
   sfxTap();
 }
@@ -2051,12 +2051,14 @@ function buildQuestions(id){
       moduleQuestions.push({type:'dictee',...d}));
   } else if(id==='dagelijks'){
     const set=window._dagelijksSet||shuffle(DAGELIJKS_SETS).slice(0,6);
-    // alternating: mc, type, mc, type, mc, type
+    // cycle: mc → type → speak → mc → type → speak
     set.forEach((w,i)=>{
       const distractors=shuffle(set.filter((_,j)=>j!==i)).slice(0,3);
       const opts=shuffle([w,...distractors]);
-      if(i%2===0) moduleQuestions.push({type:'dutch_mc',word:w.word,emoji:w.emoji,zin:w.zin,opts:opts.map(o=>o.word),correct:opts.findIndex(o=>o.word===w.word)});
-      else         moduleQuestions.push({type:'dutch_type',word:w.word,emoji:w.emoji,zin:w.zin});
+      const mode=i%3;
+      if(mode===0) moduleQuestions.push({type:'dutch_mc',   word:w.word,emoji:w.emoji,zin:w.zin,opts:opts.map(o=>o.word),correct:opts.findIndex(o=>o.word===w.word)});
+      else if(mode===1) moduleQuestions.push({type:'dutch_type', word:w.word,emoji:w.emoji,zin:w.zin});
+      else              moduleQuestions.push({type:'dutch_speak',word:w.word,emoji:w.emoji,zin:w.zin});
     });
   }
 }
@@ -2268,6 +2270,22 @@ function renderQuestion(){
     setTimeout(()=>speakDagelijks(q.word),400);
     setTimeout(()=>{ const i=document.getElementById('dagInput'); if(i) i.focus(); },1200);
     document.getElementById('dagInput').addEventListener('keyup',e=>{ if(e.key==='Enter') answerDagelijksType(); });
+  } else if(q.type==='dutch_speak'){
+    body.innerHTML=`
+      <div style="font-size:72px;text-align:center;margin:0 0 8px">${q.emoji}</div>
+      <div style="text-align:center;font-family:'Outfit',sans-serif;font-size:28px;font-weight:900;color:var(--yellow);margin-bottom:6px">${q.word}</div>
+      <div style="font-size:13px;text-align:center;color:var(--text3);font-style:italic;margin-bottom:20px">${q.zin}</div>
+      <button class="btn-primary" onclick="speakDagelijks('${q.word.replace(/'/g,"\\'")}');sfxTap()"
+        style="background:linear-gradient(135deg,var(--blue),var(--purple));margin-bottom:12px;width:100%">
+        🔊 Hoor het woord eerst
+      </button>
+      <button id="micBtn" class="btn-primary" onclick="startDagelijksSpeak('${q.word.replace(/'/g,"\\'")}',this)"
+        style="background:linear-gradient(135deg,var(--pink),var(--orange));width:100%">
+        🎤 Spreek het woord
+      </button>
+      <div id="sprekResult" style="text-align:center;font-size:15px;margin-top:14px;min-height:24px;color:var(--text3)"></div>
+      <div id="feedback" class="feedback hidden"></div>`;
+    setTimeout(()=>speakDagelijks(q.word),500);
   } else if(q.type==='raket'){
     // use data-idx to avoid quote-escaping issues with string option values
     body.innerHTML=`
@@ -2438,6 +2456,60 @@ function answerDagelijksType(){
     ok ? `✅ "${q.word}" — perfect gespeld! 🎉`
        : `❌ Het woord is: "${q.word}"  (jij schreef: "${val}")`);
   setTimeout(()=>{ moduleIdx++; renderQuestion(); }, ok?1600:2400);
+}
+
+let _dagRecognition=null;
+function startDagelijksSpeak(word, btn){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    document.getElementById('sprekResult').textContent='Spreekherkenning niet beschikbaar op dit apparaat.';
+    return;
+  }
+  if(_dagRecognition){ _dagRecognition.abort(); _dagRecognition=null; }
+  const r=new SR();
+  _dagRecognition=r;
+  r.lang='nl-NL'; r.interimResults=false; r.maxAlternatives=5;
+  btn.textContent='🎙️ Luisteren...';
+  btn.style.background='linear-gradient(135deg,var(--red),var(--pink))';
+  btn.disabled=true;
+  const lbl=document.getElementById('sprekResult');
+  lbl.textContent='Spreek nu het woord...';
+  r.start();
+  r.onresult=e=>{
+    const heard=Array.from(e.results[0]).map(a=>a.transcript.trim().toLowerCase());
+    const target=word.toLowerCase();
+    const ok=heard.some(h=>h===target||h.includes(target)||target.includes(h));
+    _dagRecognition=null;
+    if(ok){
+      sfxCorrect(); moduleCorrect++;
+      speakDagelijks(word);
+      showFeedback(true,`✅ Super! "${word}" — goed uitgesproken! 🎉`);
+      setTimeout(()=>{ moduleIdx++; renderQuestion(); },1800);
+    } else {
+      sfxWrong();
+      lbl.textContent=`Ik hoorde: "${heard[0]}" — probeer nog een keer!`;
+      btn.textContent='🎤 Probeer opnieuw';
+      btn.style.background='linear-gradient(135deg,var(--pink),var(--orange))';
+      btn.disabled=false;
+      btn.onclick=()=>startDagelijksSpeak(word,btn);
+      // after 3 failed attempts show skip
+      btn._tries=(btn._tries||0)+1;
+      if(btn._tries>=3){
+        showFeedback(false,`❌ Het woord is: "${word}" — oefenen maar! 💪`);
+        setTimeout(()=>{ moduleIdx++; renderQuestion(); },2500);
+      }
+    }
+  };
+  r.onerror=e=>{
+    _dagRecognition=null;
+    lbl.textContent='Microfoon fout — tik opnieuw om te proberen.';
+    btn.textContent='🎤 Spreek het woord';
+    btn.style.background='linear-gradient(135deg,var(--pink),var(--orange))';
+    btn.disabled=false;
+  };
+  r.onend=()=>{
+    if(_dagRecognition===r) _dagRecognition=null;
+  };
 }
 
 // ── RAKET RACE ────────────────────────────────────────────
