@@ -1002,7 +1002,7 @@ button{touch-action:manipulation;}
 <div id="bramScreen" class="screen hidden" style="min-height:100vh;padding-bottom:60px;">
   <div class="bram-hdr">
     <div class="bram-hdr-title">👁️ Bram's Review Mode</div>
-    <div class="bram-hdr-sub">Bekijk alle inhoud en Devvrat's voortgang</div>
+    <div class="bram-hdr-sub">Bekijk en beoordeel alle inhoud van de app</div>
   </div>
   <div id="bramBody"></div>
 </div>
@@ -2785,14 +2785,13 @@ function showCelebration(){
 
 // ── BRAM REVIEWER ─────────────────────────────────────────
 function renderBram(tab){
-  tab=tab||'voortgang';
+  tab=tab||'woorden';
   _bramTab=tab;
   const dp=loadProgressByName('devvrat');
   const flags=dp.flags||{};
   const flagCount=Object.values(flags).filter(f=>f&&f.flagged).length;
 
   const tabs=[
-    {id:'voortgang', label:'📊 Voortgang'},
     {id:'woorden',   label:'📚 Woorden'},
     {id:'kleding',   label:'👕 Kleding'},
     {id:'dagelijks', label:'🗣️ Dagelijks'},
@@ -2839,46 +2838,7 @@ function renderBram(tab){
 
   let body='';
 
-  if(tab==='voortgang'){
-    const totalSessions=(dp.sessions||[]).length;
-    const todayMins=dp.todayMins||0;
-    const recentSessions=(dp.sessions||[]).slice(-10).reverse();
-    body=`<div class="sandy-card">
-      <h3>👤 Devvrat Sharma — Groep 4B→5, De Arabesk</h3>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0">
-        ${[['Sessies totaal',totalSessions],['Vandaag',todayMins+' min'],['Sterren',dp.totalStars||0],['Streak',(dp.streak||1)+' 🔥']].map(([l,v])=>`
-        <div style="background:var(--card2);border-radius:12px;padding:12px;text-align:center">
-          <div style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;color:var(--yellow)">${v}</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">${l}</div>
-        </div>`).join('')}
-      </div>
-    </div>
-    <div class="sandy-card">
-      <h3>🗂 Per module</h3>
-      ${['woorden','kleding','dagelijks','spelling','delen','lezen','tafels','rekenen','dictee'].map(m=>{
-        const s=dp.stars?.[m]||0;
-        const ms=(dp.sessions||[]).filter(x=>x.module===m);
-        const avg=ms.length?Math.round(ms.reduce((a,x)=>a+x.score,0)/ms.length):null;
-        const bar=avg!==null?`<div style="height:4px;background:var(--border);border-radius:4px;margin-top:5px"><div style="height:100%;width:${avg}%;border-radius:4px;background:${avg>=80?'var(--green)':avg>=60?'var(--yellow)':'var(--red)'}"></div></div>`:'';
-        return `<div style="padding:9px 0;border-bottom:1px solid var(--border)">
-          <div style="display:flex;justify-content:space-between">
-            <span style="font-size:14px;text-transform:capitalize">${m}</span>
-            <span style="font-size:13px">${s>0?'⭐'.repeat(s):'—'} ${avg!==null?'<span style="color:var(--text3)">'+avg+'%</span>':''}</span>
-          </div>${bar}</div>`;
-      }).join('')}
-    </div>
-    <div class="sandy-card">
-      <h3>🕐 Recente sessies</h3>
-      ${recentSessions.length?recentSessions.map(s=>`
-        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px">
-          <span>${s.module}</span>
-          <span style="color:${s.score>=80?'var(--green)':s.score>=60?'var(--yellow)':'var(--red)'}">${s.score}%</span>
-          <span style="color:var(--text3)">${new Date(s.ts).toLocaleDateString('nl',{day:'2-digit',month:'short'})}</span>
-        </div>`).join('')
-      :'<div style="color:var(--text3);font-size:13px">Nog geen sessies.</div>'}
-    </div>`;
-
-  } else if(tab==='woorden'){
+  if(tab==='woorden'){
     body=`<div class="sandy-card"><h3>📚 Woordenschat — ${WOORDEN_SETS.length} woorden</h3>
       <p style="font-size:12px;color:var(--text3);margin-bottom:12px">Markeer woorden die te moeilijk, te makkelijk of onjuist zijn.</p>
       ${WOORDEN_SETS.map((w,i)=>bramItem('wo_'+i,
@@ -2976,7 +2936,7 @@ function renderBram(tab){
   document.getElementById('bramScreen').innerHTML=html;
 }
 
-let _bramTab='voortgang';
+let _bramTab='woorden';
 function bramFlag(key){
   const dp=loadProgressByName('devvrat');
   if(!dp.flags) dp.flags={};
