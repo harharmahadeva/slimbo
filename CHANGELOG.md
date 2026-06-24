@@ -5,6 +5,17 @@ Format: [v{MAJOR}.{MINOR}.{PATCH}] — YYYY-MM-DD
 
 ---
 
+## [v1.18.0] — 2026-06-24
+### Changed — Bram full teacher dashboard
+- **Complete content review access** — Bram can now browse all content across every module via tabs: Voortgang · Woordenschat · Kleding · Spelling d/t · Lezen · Dictee · Delen
+- **Flag + comment system** — every item (word, sentence, question, sum) has a ⚑ flag button and a free-text note field; notes saved to localStorage
+- **Feedback tab** — dedicated "⚑ Feedback" tab shows all flagged items and their notes in one place; badge shows count
+- **Progress view improved** — visual per-module bars (green/yellow/red), recent 10 sessions with date + score, 2×2 stat grid
+- **Tab state preserved** — re-renders same tab after flagging an item
+- **Backward compat** — old `flagItem()` calls still work via alias
+
+---
+
 ## [v1.17.0] — 2026-06-24
 ### Added
 - **Kleding module** 👕 — new themed vocabulary module matching Devvrat's current school theme (De Arabesk, Arnhem)

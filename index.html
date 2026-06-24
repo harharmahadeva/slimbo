@@ -2593,55 +2593,209 @@ function showCelebration(){
 }
 
 // ── BRAM REVIEWER ─────────────────────────────────────────
-function renderBram(){
+function renderBram(tab){
+  tab=tab||'voortgang';
+  _bramTab=tab;
   const dp=loadProgressByName('devvrat');
-  const totalSessions=(dp.sessions||[]).length;
-  const todayMins=dp.todayMins||0;
+  const flags=dp.flags||{};
+  const flagCount=Object.values(flags).filter(f=>f&&f.flagged).length;
 
-  let html=`<div class="sandy-header"><button class="btn-icon" onclick="logout()">← Uitloggen</button><h2 style="margin:0;font-size:1.1rem">Bram — Reviewer 🔍</h2></div>
-  <div class="sandy-body">
-    <div class="sandy-card">
-      <h3>📊 Devvrat's voortgang</h3>
-      <p>Totaal sessies: <strong>${totalSessions}</strong></p>
-      <p>Vandaag actief: <strong>${todayMins} min</strong></p>
-      <p>Sterren: <strong>${dp.totalStars||0} ⭐</strong></p>
-      <p>Streak: <strong>${dp.streak||1} 🔥</strong></p>
+  const tabs=[
+    {id:'voortgang', label:'📊 Voortgang'},
+    {id:'woorden',   label:'📚 Woorden'},
+    {id:'kleding',   label:'👕 Kleding'},
+    {id:'spelling',  label:'✏️ Spelling d/t'},
+    {id:'lezen',     label:'📖 Lezen'},
+    {id:'dictee',    label:'📝 Dictee'},
+    {id:'delen',     label:'➗ Delen'},
+    {id:'flags',     label:`⚑ Feedback${flagCount?` (${flagCount})`:''}` },
+  ];
+
+  const tabBar=`<div style="display:flex;overflow-x:auto;gap:6px;padding:10px 16px 0;scrollbar-width:none">
+    ${tabs.map(t=>`<button onclick="renderBram('${t.id}')"
+      style="flex-shrink:0;padding:8px 12px;border-radius:99px;border:none;cursor:pointer;font-size:12px;font-weight:700;font-family:'Space Grotesk',sans-serif;
+      background:${tab===t.id?'linear-gradient(135deg,var(--purple),var(--blue))':'rgba(255,255,255,.08)'};
+      color:${tab===t.id?'#fff':'var(--text3)'}">
+      ${t.label}</button>`).join('')}
+  </div>`;
+
+  function bramItem(key, top, bottom, note){
+    const f=flags[key]||{};
+    const isFlagged=!!f.flagged;
+    return `<div style="background:${isFlagged?'rgba(255,84,84,.1)':'rgba(255,255,255,.04)'};
+      border:1px solid ${isFlagged?'rgba(255,84,84,.3)':'var(--border)'};
+      border-radius:12px;padding:12px;margin-bottom:8px">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px">${top}</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px">${bottom}</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button onclick="bramFlag('${key}')"
+          style="padding:5px 12px;border-radius:8px;border:1px solid ${isFlagged?'var(--red)':'var(--border)'};
+          background:${isFlagged?'rgba(255,84,84,.15)':'transparent'};
+          color:${isFlagged?'var(--red)':'var(--text3)'};font-size:12px;font-weight:700;cursor:pointer;
+          font-family:'Space Grotesk',sans-serif">
+          ${isFlagged?'✓ Gemarkeerd':'⚑ Markeer'}
+        </button>
+        <input id="note_${key}" type="text" placeholder="Opmerking voor Sandy..."
+          value="${esc(f.note||'')}"
+          onchange="bramNote('${key}',this.value)"
+          style="flex:1;min-width:120px;background:rgba(255,255,255,.06);border:1px solid var(--border);
+          color:var(--text);border-radius:8px;padding:5px 10px;font-size:12px;
+          font-family:'Space Grotesk',sans-serif;outline:none">
+      </div>
+    </div>`;
+  }
+
+  let body='';
+
+  if(tab==='voortgang'){
+    const totalSessions=(dp.sessions||[]).length;
+    const todayMins=dp.todayMins||0;
+    const recentSessions=(dp.sessions||[]).slice(-10).reverse();
+    body=`<div class="sandy-card">
+      <h3>👤 Devvrat Sharma — Groep 4B→5, De Arabesk</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0">
+        ${[['Sessies totaal',totalSessions],['Vandaag',todayMins+' min'],['Sterren',dp.totalStars||0],['Streak',(dp.streak||1)+' 🔥']].map(([l,v])=>`
+        <div style="background:var(--card2);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;color:var(--yellow)">${v}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${l}</div>
+        </div>`).join('')}
+      </div>
     </div>
     <div class="sandy-card">
-      <h3>🗂 Module resultaten</h3>`;
-  ['woorden','spelling','delen','lezen','tafels','rekenen','dictee','kleding'].forEach(m=>{
-    const s=dp.stars?.[m]||0;
-    const mSessions=(dp.sessions||[]).filter(x=>x.module===m);
-    const avgScore=mSessions.length?Math.round(mSessions.reduce((a,x)=>a+x.score,0)/mSessions.length):null;
-    html+=`<div style="display:flex;align-items:center;justify-content:space-between;margin:6px 0">
-      <span style="text-transform:capitalize">${m}</span>
-      <span>${s>0?'⭐'.repeat(s):'—'} ${avgScore!==null?avgScore+'%':''}</span>
-    </div>`;
-  });
-  html+=`</div>
+      <h3>🗂 Per module</h3>
+      ${['woorden','kleding','spelling','delen','lezen','tafels','rekenen','dictee'].map(m=>{
+        const s=dp.stars?.[m]||0;
+        const ms=(dp.sessions||[]).filter(x=>x.module===m);
+        const avg=ms.length?Math.round(ms.reduce((a,x)=>a+x.score,0)/ms.length):null;
+        const bar=avg!==null?`<div style="height:4px;background:var(--border);border-radius:4px;margin-top:5px"><div style="height:100%;width:${avg}%;border-radius:4px;background:${avg>=80?'var(--green)':avg>=60?'var(--yellow)':'var(--red)'}"></div></div>`:'';
+        return `<div style="padding:9px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between">
+            <span style="font-size:14px;text-transform:capitalize">${m}</span>
+            <span style="font-size:13px">${s>0?'⭐'.repeat(s):'—'} ${avg!==null?'<span style="color:var(--text3)">'+avg+'%</span>':''}</span>
+          </div>${bar}</div>`;
+      }).join('')}
+    </div>
     <div class="sandy-card">
-      <h3>📝 Inhoud review</h3>
-      <p style="font-size:.85rem;opacity:.7">Bekijk en markeer oefeningen:</p>`;
-  DT_OEFENINGEN.slice(0,5).forEach((o,i)=>{
-    const flagged=(dp.flags||{})[`dt_${i}`];
-    html+=`<div style="background:rgba(255,255,255,.05);padding:8px;border-radius:8px;margin:6px 0;font-size:.85rem">
-      <div>${o.zin}</div>
-      <div style="opacity:.6">Antwoord: ${o.keuzes[o.correct]}</div>
-      <button onclick="flagItem('dt_${i}')" style="margin-top:4px;padding:4px 10px;border-radius:6px;border:none;background:${flagged?'#F87171':'rgba(255,255,255,.15)'};color:#fff;cursor:pointer;font-size:.8rem">${flagged?'✓ Gemarkeerd':'⚑ Markeer'}</button>
+      <h3>🕐 Recente sessies</h3>
+      ${recentSessions.length?recentSessions.map(s=>`
+        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px">
+          <span>${s.module}</span>
+          <span style="color:${s.score>=80?'var(--green)':s.score>=60?'var(--yellow)':'var(--red)'}">${s.score}%</span>
+          <span style="color:var(--text3)">${new Date(s.ts).toLocaleDateString('nl',{day:'2-digit',month:'short'})}</span>
+        </div>`).join('')
+      :'<div style="color:var(--text3);font-size:13px">Nog geen sessies.</div>'}
     </div>`;
-  });
-  html+=`</div></div>`;
+
+  } else if(tab==='woorden'){
+    body=`<div class="sandy-card"><h3>📚 Woordenschat — ${WOORDEN_SETS.length} woorden</h3>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:12px">Markeer woorden die te moeilijk, te makkelijk of onjuist zijn.</p>
+      ${WOORDEN_SETS.map((w,i)=>bramItem('wo_'+i,
+        `${w.emoji} ${w.word}`,
+        `Hint: ${w.hint}`)).join('')}
+    </div>`;
+
+  } else if(tab==='kleding'){
+    body=`<div class="sandy-card"><h3>👕 Kleding — ${KLEDING_SETS.length} woorden</h3>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:12px">Themawoorden passend bij het huidige schoolthema.</p>
+      ${KLEDING_SETS.map((w,i)=>bramItem('kl_'+i,
+        `${w.emoji} ${w.word}`,
+        `Hint: ${w.hint}`)).join('')}
+    </div>`;
+
+  } else if(tab==='spelling'){
+    body=`<div class="sandy-card"><h3>✏️ Spelling d/t — ${DT_OEFENINGEN.length} oefeningen</h3>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:12px">Controleer of de zin, het correcte antwoord en de uitleg kloppen.</p>
+      ${DT_OEFENINGEN.map((o,i)=>bramItem('dt_'+i,
+        o.zin,
+        `✓ ${o.keuzes[o.correct]} &nbsp;·&nbsp; ${o.uitleg}`)).join('')}
+    </div>`;
+
+  } else if(tab==='lezen'){
+    body=`<div class="sandy-card"><h3>📖 Begrijpend Lezen — ${LEZEN_VERHALEN.length} verhalen</h3>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:12px">Controleer of de vragen en antwoorden bij de tekst passen.</p>
+      ${LEZEN_VERHALEN.map((v,vi)=>`
+        <div style="margin-bottom:14px">
+          <div style="font-size:15px;font-weight:800;color:var(--blue);margin-bottom:6px">📖 ${v.titel}</div>
+          <div style="font-size:12px;color:var(--text3);background:var(--card2);border-radius:10px;padding:10px;margin-bottom:8px;line-height:1.7">${v.tekst}</div>
+          ${v.vragen.map((q,qi)=>bramItem(`lz_${vi}_${qi}`,
+            q.v,
+            `✓ ${q.keuzes[q.correct]} &nbsp;·&nbsp; Opties: ${q.keuzes.join(' / ')}`)).join('')}
+        </div>`).join('')}
+    </div>`;
+
+  } else if(tab==='dictee'){
+    const cats=[...new Set(DICTEE_ZINNEN.map(d=>d.cat))];
+    body=`<div class="sandy-card"><h3>📝 Dictee — ${DICTEE_ZINNEN.length} woorden</h3>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:12px">Controleer of de zin, hint en categorie kloppen voor Groep 4.</p>
+      ${cats.map(cat=>`
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--purple);margin:12px 0 6px">${cat}</div>
+        ${DICTEE_ZINNEN.filter(d=>d.cat===cat).map((d,i)=>bramItem('dc_'+i,
+          `${d.emoji} ${d.woord}`,
+          `${d.zin} &nbsp;·&nbsp; Hint: ${d.hint}`)).join('')}`).join('')}
+    </div>`;
+
+  } else if(tab==='delen'){
+    body=`<div class="sandy-card"><h3>➗ Delen — ${DELEN_SOMMEN.length} sommen</h3>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:12px">Controleer of de sommen op het juiste niveau zijn voor Groep 4/5.</p>
+      ${[1,2,3].map(diff=>`
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--orange);margin:12px 0 6px">Niveau ${diff}</div>
+        ${DELEN_SOMMEN.filter(s=>s.diff===diff).map((s,i)=>bramItem('dl_'+diff+'_'+i,
+          `${s.a} ÷ ${s.b} = ${s.a/s.b}`,
+          `Niveau ${s.diff}`)).join('')}`).join('')}
+    </div>`;
+
+  } else if(tab==='flags'){
+    const flagged=Object.entries(flags).filter(([,f])=>f&&f.flagged);
+    body=`<div class="sandy-card">
+      <h3>⚑ Jouw feedback (${flagged.length} items gemarkeerd)</h3>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:12px">
+        Alles wat je hebt gemarkeerd staat hier. Sandy kan dit bekijken via haar dashboard.
+      </p>
+      ${flagged.length?flagged.map(([key,f])=>`
+        <div style="background:rgba(255,84,84,.08);border:1px solid rgba(255,84,84,.25);
+          border-radius:12px;padding:12px;margin-bottom:8px">
+          <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px">⚑ ${key}</div>
+          ${f.note?`<div style="font-size:13px;color:var(--text2)">"${esc(f.note)}"</div>`:'<div style="font-size:12px;color:var(--text3)">Geen opmerking toegevoegd.</div>'}
+          <button onclick="bramFlag('${key}')" style="margin-top:8px;padding:4px 10px;border-radius:8px;
+            border:1px solid var(--border);background:transparent;color:var(--text3);
+            font-size:11px;cursor:pointer;font-family:'Space Grotesk',sans-serif">
+            Markering verwijderen
+          </button>
+        </div>`).join('')
+      :'<div style="color:var(--text3);font-size:14px;text-align:center;padding:20px 0">Nog niets gemarkeerd. Ga naar een module-tab om inhoud te beoordelen.</div>'}
+    </div>`;
+  }
+
+  const html=`
+    <div style="background:linear-gradient(135deg,var(--purple),var(--blue));padding:16px;text-align:center;border-radius:0 0 20px 20px;margin-bottom:4px">
+      <div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#fff">🔍 Bram — Leerkracht Review</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:2px">De Arabesk · Devvrat Sharma</div>
+      <button onclick="logout()" style="margin-top:10px;padding:7px 16px;border-radius:99px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;font-size:12px;cursor:pointer;font-family:'Space Grotesk',sans-serif">← Uitloggen</button>
+    </div>
+    ${tabBar}
+    <div style="padding:12px 16px 40px">${body}</div>`;
+
   document.getElementById('bramScreen').innerHTML=html;
 }
 
-function flagItem(key){
+let _bramTab='voortgang';
+function bramFlag(key){
   const dp=loadProgressByName('devvrat');
   if(!dp.flags) dp.flags={};
-  dp.flags[key]=!dp.flags[key];
+  const cur=dp.flags[key]||{};
+  dp.flags[key]={...cur, flagged:!cur.flagged};
   saveProgressByName('devvrat',dp);
   sfxTap();
-  renderBram();
+  renderBram(_bramTab);
 }
+function bramNote(key,val){
+  const dp=loadProgressByName('devvrat');
+  if(!dp.flags) dp.flags={};
+  const cur=dp.flags[key]||{};
+  dp.flags[key]={...cur, note:val};
+  saveProgressByName('devvrat',dp);
+}
+function flagItem(key){ bramFlag(key); } // backward compat
 
 // ── SANDY PARENT DASHBOARD ─────────────────────────────────
 function renderSandy(){
