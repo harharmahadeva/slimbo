@@ -46,10 +46,27 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 /* ── APP SHELL ── */
 #appShell{width:100%;max-width:480px;min-height:100vh;background:var(--bg);
   position:relative;box-shadow:0 0 80px rgba(0,0,0,.9);overflow:hidden;}
-/* on real phones: fill the full screen, no centering gap */
+/* iPhone: fill edge to edge */
 @media (max-width:500px){
   body{justify-content:flex-start;}
   #appShell{max-width:100%;box-shadow:none;}
+}
+/* iPad: fill full screen, wider layouts */
+@media (min-width:700px){
+  body{justify-content:flex-start;}
+  #appShell{max-width:100%;box-shadow:none;}
+  .modules-grid{grid-template-columns:repeat(3,1fr);gap:16px;padding:0 24px;}
+  .module-card{padding:22px 18px;}
+  .mod-emoji{font-size:46px;}
+  .mod-name{font-size:18px;}
+  .ex-body{max-width:600px;margin:0 auto;padding:28px 32px!important;}
+  .ex-header{padding:0 24px;}
+  .home-hero{padding:28px 24px 20px;}
+  .stats-row{padding:0 24px;}
+  .resume-card{margin:0 24px 16px;}
+  .tips-card{margin:0 24px 16px;}
+  .sandy-body,.bram-body{max-width:700px;margin:0 auto;}
+  #bramBody,.sandy-inner{max-width:700px;margin:0 auto;padding:0 24px;}
 }
 .screen{position:absolute;inset:0;z-index:10;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .hidden{display:none!important;}
