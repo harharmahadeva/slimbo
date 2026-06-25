@@ -46,6 +46,11 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 /* ── APP SHELL ── */
 #appShell{width:100%;max-width:480px;min-height:100vh;background:var(--bg);
   position:relative;box-shadow:0 0 80px rgba(0,0,0,.9);overflow:hidden;}
+/* on real phones: fill the full screen, no centering gap */
+@media (max-width:500px){
+  body{justify-content:flex-start;}
+  #appShell{max-width:100%;box-shadow:none;}
+}
 .screen{position:absolute;inset:0;z-index:10;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .hidden{display:none!important;}
 
