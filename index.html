@@ -51,8 +51,8 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
   body{justify-content:flex-start;}
   #appShell{max-width:100%;box-shadow:none;}
 }
-/* iPad: fill full screen, wider layouts */
-@media (min-width:700px){
+/* iPad only (touch + wide): fill full screen, wider layouts */
+@media (min-width:700px) and (pointer:coarse){
   body{justify-content:flex-start;}
   #appShell{max-width:100%;box-shadow:none;}
   .modules-grid{grid-template-columns:repeat(3,1fr);gap:16px;padding:0 24px;}
@@ -65,8 +65,7 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
   .stats-row{padding:0 24px;}
   .resume-card{margin:0 24px 16px;}
   .tips-card{margin:0 24px 16px;}
-  .sandy-body,.bram-body{max-width:700px;margin:0 auto;}
-  #bramBody,.sandy-inner{max-width:700px;margin:0 auto;padding:0 24px;}
+  #bramBody{max-width:700px;margin:0 auto;padding:0 24px;}
 }
 .screen{position:absolute;inset:0;z-index:10;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .hidden{display:none!important;}
@@ -626,6 +625,8 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 .sandy-header{display:flex;align-items:center;gap:10px;padding:14px 16px;
   border-bottom:1px solid rgba(255,255,255,.07);position:sticky;top:0;
   background:var(--bg);z-index:100;backdrop-filter:blur(12px);}
+.sandy-header h2{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sandy-header .btn-icon{white-space:nowrap;flex-shrink:0;}
 .sandy-body{padding:12px 16px 60px;}
 .sandy-card{background:var(--card);border:1px solid var(--border);border-radius:16px;
   padding:14px 16px;margin-bottom:12px;}
@@ -2901,6 +2902,24 @@ function showCelebration(){
   if(!progress.sessions) progress.sessions=[];
   progress.sessions.push({module:moduleId, score:pct, stars, ts:Date.now()});
   saveProgress();
+  // sync to server so Sandy can see progress from any device
+  if(currentUser?.name==='devvrat'){
+    fetch('/api/sync-progress',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        stars:progress.stars,
+        totalStars:progress.totalStars,
+        todayMins:progress.todayMins,
+        todayDone:progress.todayDone,
+        streak:progress.streak,
+        sessions:(progress.sessions||[]).slice(-50),
+        dailyTime:progress.dailyTime,
+        tafelsMastered:progress.tafelsMastered,
+        lastSync:Date.now(),
+      }),
+    }).catch(()=>{});
+  }
 
   sfxFanfare();
 
@@ -3098,7 +3117,15 @@ function flagItem(key){ bramFlag(key); } // backward compat
 
 // ── SANDY PARENT DASHBOARD ─────────────────────────────────
 function renderSandy(){
+  // Try to fetch live data from server first (works cross-device)
+  fetch('/api/get-progress').then(r=>r.ok?r.json():null).then(remote=>{
+    if(remote) _renderSandyWith(remote);
+  }).catch(()=>{});
+  // Also render immediately from localStorage (may be empty on Sandy's device)
   const dp=loadProgressByName('devvrat');
+  _renderSandyWith(dp);
+}
+function _renderSandyWith(dp){
   const allSessions=dp.sessions||[];
   const todayMins=dp.todayMins||0;
   const minGoal=dp.minGoal||120;
@@ -3126,8 +3153,9 @@ function renderSandy(){
   const dayLabels=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
   let html=`<div class="sandy-header">
-    <button class="btn-icon" onclick="logout()">← Logout</button>
-    <h2 style="margin:0;font-size:1.1rem">Sandy — Parent Dashboard 📊</h2>
+    <button class="btn-icon" onclick="logout()" style="font-size:20px;padding:6px 10px">←</button>
+    <h2 style="margin:0;font-size:1.1rem;flex:1">Sandy — Parent Dashboard 📊</h2>
+    <button class="btn-icon" onclick="logout()" style="font-size:13px;padding:6px 12px;color:var(--text3)">Sign out</button>
   </div>
   <div class="sandy-body">
 
