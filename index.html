@@ -2074,14 +2074,12 @@ function buildQuestions(id){
       moduleQuestions.push({type:'dictee',...d}));
   } else if(id==='dagelijks'){
     const set=window._dagelijksSet||shuffle(DAGELIJKS_SETS).slice(0,6);
-    // cycle: mc → type → speak → mc → type → speak
+    // alternating: listen+choose → speak → listen+choose → speak …
     set.forEach((w,i)=>{
       const distractors=shuffle(set.filter((_,j)=>j!==i)).slice(0,3);
       const opts=shuffle([w,...distractors]);
-      const mode=i%3;
-      if(mode===0) moduleQuestions.push({type:'dutch_mc',   word:w.word,emoji:w.emoji,zin:w.zin,opts:opts.map(o=>o.word),correct:opts.findIndex(o=>o.word===w.word)});
-      else if(mode===1) moduleQuestions.push({type:'dutch_type', word:w.word,emoji:w.emoji,zin:w.zin});
-      else              moduleQuestions.push({type:'dutch_speak',word:w.word,emoji:w.emoji,zin:w.zin});
+      if(i%2===0) moduleQuestions.push({type:'dutch_mc',   word:w.word,emoji:w.emoji,zin:w.zin,opts:opts.map(o=>o.word),correct:opts.findIndex(o=>o.word===w.word)});
+      else        moduleQuestions.push({type:'dutch_speak',word:w.word,emoji:w.emoji,zin:w.zin});
     });
   }
 }
