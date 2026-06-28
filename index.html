@@ -3109,10 +3109,12 @@ function renderBram(tab){
   }
 
   const html=`
-    <div style="background:linear-gradient(135deg,var(--purple),var(--blue));padding:16px;text-align:center;border-radius:0 0 20px 20px;margin-bottom:4px">
-      <div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#fff">🔍 Bram — Leerkracht Review</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:2px">De Arabesk · Devvrat Sharma</div>
-      <button class="btn-logout" onclick="logout()" style="margin-top:10px">Uitloggen</button>
+    <div style="background:linear-gradient(135deg,var(--purple),var(--blue));padding:16px;border-radius:0 0 20px 20px;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#fff">🔍 Bram — Leerkracht Review</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:2px">De Arabesk · Devvrat Sharma</div>
+      </div>
+      <button class="btn-logout" onclick="logout()">Uitloggen</button>
     </div>
     ${tabBar}
     <div style="padding:12px 16px 40px">${body}</div>`;
