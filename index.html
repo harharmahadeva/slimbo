@@ -569,8 +569,11 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 .btn-secondary{width:100%;background:rgba(255,255,255,.1);color:var(--text);
   border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:14px;font-size:15px;
   font-weight:700;cursor:pointer;font-family:"Outfit",sans-serif;margin-top:8px;min-height:50px;}
-.btn-icon{background:rgba(255,255,255,.1);border:none;color:var(--text);border-radius:50%;
-  width:40px;height:40px;font-size:18px;cursor:pointer;flex-shrink:0;}
+.btn-icon{background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.2);
+  color:var(--text);border-radius:12px;padding:8px 14px;font-size:14px;font-weight:700;
+  cursor:pointer;flex-shrink:0;font-family:"Space Grotesk",sans-serif;
+  min-height:40px;line-height:1;white-space:nowrap;transition:background .15s;}
+.btn-icon:active{background:rgba(255,255,255,.22);}
 
 .ex-header{display:flex;align-items:center;gap:10px;padding:12px 16px 8px;
   border-bottom:1px solid rgba(255,255,255,.07);}
@@ -1054,7 +1057,7 @@ button{touch-action:manipulation;}
         <div class="sandy-hdr-title">👨‍👩‍👦 Devvrat's Progress</div>
         <div class="sandy-hdr-sub">Parent Dashboard · Slimbo</div>
       </div>
-      <button class="logout-btn" onclick="logout()">Sign out</button>
+      <button class="btn-icon" onclick="logout()">← Uitloggen</button>
     </div>
   </div>
   <div id="sandyBody"></div>
@@ -1973,7 +1976,7 @@ function renderWoordenLearn(id){
     </div>`).join('');
   ex.innerHTML=`
     <div class="ex-header">
-      <button class="btn-icon" onclick="goHome()">←</button>
+      <button class="btn-icon" onclick="goHome()">← Terug</button>
       <div style="flex:1;text-align:center;font-family:'Outfit',sans-serif;font-weight:800;font-size:17px">Woordenschat 📚</div>
       <div style="width:46px"></div>
     </div>
@@ -2017,7 +2020,7 @@ function renderDagelijksLearn(){
     </div>`).join('');
   ex.innerHTML=`
     <div class="ex-header">
-      <button class="btn-icon" onclick="goHome()">←</button>
+      <button class="btn-icon" onclick="goHome()">← Terug</button>
       <div style="flex:1;text-align:center;font-family:'Outfit',sans-serif;font-weight:800;font-size:17px">Dagelijks 🗣️</div>
       <div style="width:46px"></div>
     </div>
@@ -2172,7 +2175,7 @@ function renderQuestion(){
   const _realIdx=moduleQuestions.slice(0,moduleIdx).filter(q=>!_introTypes.has(q.type)).length;
   const _isIntro=_introTypes.has(q.type);
   ex.innerHTML=`<div class="ex-header">
-    <button class="btn-icon" onclick="goHome()">🏠</button>
+    <button class="btn-icon" onclick="goHome()">🏠 Huis</button>
     <div class="ex-progress">${_isIntro?'Uitleg':(_realIdx+1)+'/'+_realQs.length}</div>
     <div class="ex-dots">${_realQs.map((_,i)=>`<span class="dot${i<_realIdx?' done':i===_realIdx?' active':''}" style="width:8px;height:8px;border-radius:50%;display:inline-block;margin:2px;background:${i<_realIdx?'#A3E635':i===_realIdx?'#FACC15':'rgba(255,255,255,.3)'}"></span>`).join('')}</div>
   </div><div class="ex-body" id="exBody"></div>`;
@@ -2671,7 +2674,7 @@ function showRaketResult(){
 function renderTafelPicker(){
   const ex=document.getElementById('exerciseScreen');
   ex.innerHTML=`<div class="ex-header">
-    <button class="btn-icon" onclick="goHome()">🏠</button>
+    <button class="btn-icon" onclick="goHome()">🏠 Huis</button>
     <div class="ex-progress">Kies een tafel</div>
   </div>
   <div class="ex-body">
@@ -2736,7 +2739,7 @@ function renderTafelLearn(){
 
   ex.innerHTML=`
     <div class="ex-header">
-      <button class="btn-icon" onclick="renderTafelPicker()">←</button>
+      <button class="btn-icon" onclick="renderTafelPicker()">← Terug</button>
       <div style="flex:1;text-align:center;font-family:'Outfit',sans-serif;font-weight:800;font-size:17px">Tafel van ${tafelN}</div>
       <div style="width:46px"></div>
     </div>
@@ -2793,7 +2796,7 @@ function renderTafelAdaptive(){
   const ex   = document.getElementById('exerciseScreen');
   ex.innerHTML=`
     <div class="ex-header">
-      <button class="btn-icon" onclick="goHome()">🏠</button>
+      <button class="btn-icon" onclick="goHome()">🏠 Huis</button>
       <div style="flex:1;text-align:center;font-family:'Outfit',sans-serif;font-weight:800;font-size:15px">Tafel van ${tafelN}</div>
       <div class="ex-progress">${mc}/10 ✓</div>
     </div>
@@ -3103,7 +3106,7 @@ function renderBram(tab){
     <div style="background:linear-gradient(135deg,var(--purple),var(--blue));padding:16px;text-align:center;border-radius:0 0 20px 20px;margin-bottom:4px">
       <div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#fff">🔍 Bram — Leerkracht Review</div>
       <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:2px">De Arabesk · Devvrat Sharma</div>
-      <button onclick="logout()" style="margin-top:10px;padding:7px 16px;border-radius:99px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;font-size:12px;cursor:pointer;font-family:'Space Grotesk',sans-serif">← Uitloggen</button>
+      <button class="btn-icon" onclick="logout()" style="margin-top:10px">← Uitloggen</button>
     </div>
     ${tabBar}
     <div style="padding:12px 16px 40px">${body}</div>`;
@@ -3168,9 +3171,8 @@ function _renderSandyWith(dp){
   const dayLabels=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
   let html=`<div class="sandy-header">
-    <button class="btn-icon" onclick="logout()" style="font-size:20px;padding:6px 10px">←</button>
+    <button class="btn-icon" onclick="logout()">← Uitloggen</button>
     <h2 style="margin:0;font-size:1.1rem;flex:1">Sandy — Parent Dashboard 📊</h2>
-    <button class="btn-icon" onclick="logout()" style="font-size:13px;padding:6px 12px;color:var(--text3)">Sign out</button>
   </div>
   <div class="sandy-body">
 
