@@ -13,6 +13,7 @@ Format: [v{MAJOR}.{MINOR}.{PATCH}] — YYYY-MM-DD
 - **Bram logout** — removed inline styles, now uses `.btn-icon` class consistently
 - **Sandy header** — removed duplicate "Sign out" button; single `← Uitloggen` button remains
 - **Tafel picker back** — labelled `← Terug` instead of bare arrow
+- **Version number** — `v1.21.0` shown on login screen below the tagline
 
 ---
 
