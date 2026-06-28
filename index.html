@@ -46,26 +46,42 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 /* ── APP SHELL ── */
 #appShell{width:100%;max-width:480px;min-height:100vh;background:var(--bg);
   position:relative;box-shadow:0 0 80px rgba(0,0,0,.9);overflow:hidden;}
-/* iPhone: fill edge to edge */
-@media (max-width:500px){
+/* ── RESPONSIVE ─────────────────────────────────────────────
+   Phone (iPhone/Android) : full-width, edge-to-edge
+   Tablet (iPad/Android)  : full-width, 3-col grid, wider content
+   Desktop (Mac/Windows)  : 500px centred shell, polished shadow
+   ─────────────────────────────────────────────────────────── */
+
+/* iPhone & Android phones — fill edge to edge */
+@media (max-width:540px){
   body{justify-content:flex-start;}
-  #appShell{max-width:100%;box-shadow:none;}
+  #appShell{max-width:100%;box-shadow:none;border-radius:0;}
 }
-/* iPad only (touch + wide): fill full screen, wider layouts */
-@media (min-width:700px) and (pointer:coarse){
+
+/* iPad & Android tablets (touch + wide screen) */
+@media (min-width:600px) and (pointer:coarse){
   body{justify-content:flex-start;}
-  #appShell{max-width:100%;box-shadow:none;}
+  #appShell{max-width:100%;box-shadow:none;border-radius:0;}
   .modules-grid{grid-template-columns:repeat(3,1fr);gap:16px;padding:0 24px;}
   .module-card{padding:22px 18px;}
   .mod-emoji{font-size:46px;}
   .mod-name{font-size:18px;}
-  .ex-body{max-width:600px;margin:0 auto;padding:28px 32px!important;}
-  .ex-header{padding:0 24px;}
-  .home-hero{padding:28px 24px 20px;}
-  .stats-row{padding:0 24px;}
-  .resume-card{margin:0 24px 16px;}
-  .tips-card{margin:0 24px 16px;}
-  #bramBody{max-width:700px;margin:0 auto;padding:0 24px;}
+  .home-hero{padding:28px 28px 20px;}
+  .stats-row{padding:0 28px;}
+  .resume-card{margin:0 28px 16px;}
+  .tips-card{margin:0 28px 16px;}
+  .ex-body{max-width:640px;margin:0 auto;padding:28px 32px!important;}
+  #bramBody{max-width:720px;margin:0 auto;padding:0 24px;}
+  .sandy-body{max-width:720px;margin:0 auto;}
+  .login-card{max-width:540px;}
+}
+
+/* MacBook, Chrome, Windows laptop (mouse/trackpad, wide screen) */
+@media (min-width:600px) and (pointer:fine){
+  #appShell{max-width:500px;border-radius:24px;margin:24px auto;min-height:calc(100vh - 48px);
+    box-shadow:0 0 0 1px rgba(255,255,255,.06),0 32px 80px rgba(0,0,0,.8);}
+  body{align-items:flex-start;padding:0;}
+  #homeScreen{min-height:calc(100vh - 48px);}
 }
 .screen{position:absolute;inset:0;z-index:10;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .hidden{display:none!important;}
@@ -1080,7 +1096,7 @@ button{touch-action:manipulation;}
 <div id="pinOverlay" class="overlay hidden">
   <div class="pin-card">
     <div class="pin-title">🔐 Mama PIN</div>
-    <div class="pin-sub">Vraag mama om de PIN in te voeren om de pauze over te slaan.</div>
+    <div class="pin-sub">Vraag een volwassene om de PIN in te voeren om de pauze over te slaan.</div>
     <input class="pin-input" id="pinInput" type="password" inputmode="numeric" maxlength="6" placeholder="••••">
     <button class="pin-ok" onclick="checkSkipPin()">Bevestigen</button>
     <button class="pin-cancel" onclick="cancelPin()">Annuleren</button>
@@ -1507,7 +1523,7 @@ function showHome(){
   showScreen('homeScreen');
   updateTimeDisplay();
   const hr   = new Date().getHours();
-  const greet = hr<6?'Goedenacht 🌙':hr<12?'Goedemorgen ☀️':hr<17?'Goedemiddag 😎':'Goedenavond 🌆';
+  const greet = hr<6?'Goedenacht 🌙':hr<12?'Goedemorgen ☀️':hr<18?'Goedemiddag 😎':'Goedenavond 🌆';
   document.getElementById('heroGreeting').textContent = greet;
   document.getElementById('heroName').textContent     = currentUser.displayName + '!';
   document.getElementById('streakChip').textContent   = '🔥 ' + (progress.streak||1);
@@ -2206,8 +2222,9 @@ function renderQuestion(){
     <div id="exStepDiv">${exSteps[0].html}</div>
     <button class="btn-primary" onclick="nextExStep()">Volgende stap →</button>`;
   } else if(q.type==='delen'){
-    const wrong1=q.b===1?q.a+2:q.a/q.b+1, wrong2=q.a/q.b+2;
     const ans=q.a/q.b;
+    const wrong1=ans+q.b<=q.a?ans+q.b:Math.max(1,ans-q.b);
+    const wrong2=ans===q.b?ans+1:q.b;
     const opts=shuffle([ans,wrong1,wrong2]);
     body.innerHTML=`<div class="delen-sum">${q.a} ÷ ${q.b} = ?</div>
     <div class="mc-opts">${opts.map((o,i)=>`<button class="mc-btn" onclick="answerDelen(${o},${ans})">${o}</button>`).join('')}</div>
