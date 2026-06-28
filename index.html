@@ -2977,9 +2977,9 @@ function renderBram(tab){
     {id:'flags',     label:`⚑ Feedback${flagCount?` (${flagCount})`:''}` },
   ];
 
-  const tabBar=`<div style="display:flex;overflow-x:auto;gap:6px;padding:10px 16px 0;scrollbar-width:none">
+  const tabBar=`<div style="display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px 6px;">
     ${tabs.map(t=>`<button onclick="renderBram('${t.id}')"
-      style="flex-shrink:0;padding:8px 12px;border-radius:99px;border:none;cursor:pointer;font-size:12px;font-weight:700;font-family:'Space Grotesk',sans-serif;
+      style="flex-shrink:0;padding:7px 11px;border-radius:99px;border:none;cursor:pointer;font-size:11px;font-weight:700;font-family:'Space Grotesk',sans-serif;scroll-snap-align:start;
       background:${tab===t.id?'linear-gradient(135deg,var(--purple),var(--blue))':'rgba(255,255,255,.08)'};
       color:${tab===t.id?'#fff':'var(--text3)'}">
       ${t.label}</button>`).join('')}
