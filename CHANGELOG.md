@@ -5,6 +5,17 @@ Format: [v{MAJOR}.{MINOR}.{PATCH}] — YYYY-MM-DD
 
 ---
 
+## [v1.21.0] — 2026-06-28
+### Changed — Button UX overhaul
+- **`.btn-icon` restyled** — all nav buttons are now pill-shaped with a visible border, padding, and bold text instead of bare icon circles
+- **Back buttons labelled** — all `←` bare arrows now show `← Terug`; all `🏠` bare home icons now show `🏠 Huis`
+- **Logout buttons labelled** — Bram and Sandy dashboards show `← Uitloggen` using the same `btn-icon` style
+- **Bram logout** — removed inline styles, now uses `.btn-icon` class consistently
+- **Sandy header** — removed duplicate "Sign out" button; single `← Uitloggen` button remains
+- **Tafel picker back** — labelled `← Terug` instead of bare arrow
+
+---
+
 ## [v1.20.0] — 2026-06-24
 ### Added — Background push notifications (iPad)
 - **True push notifications** — Devvrat's iPad now receives study reminders even when the app is closed, via Web Push API (requires iOS 16.4+, PWA installed to home screen)
