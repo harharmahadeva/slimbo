@@ -574,6 +574,11 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
   cursor:pointer;flex-shrink:0;font-family:"Space Grotesk",sans-serif;
   min-height:40px;line-height:1;white-space:nowrap;transition:background .15s;}
 .btn-icon:active{background:rgba(255,255,255,.22);}
+.btn-logout{background:rgba(255,80,80,.18);border:1.5px solid rgba(255,100,100,.35);
+  color:#ff9090;border-radius:12px;padding:8px 14px;font-size:14px;font-weight:700;
+  cursor:pointer;flex-shrink:0;font-family:"Space Grotesk",sans-serif;
+  min-height:40px;line-height:1;white-space:nowrap;transition:background .15s;}
+.btn-logout:active{background:rgba(255,80,80,.30);}
 
 .ex-header{display:flex;align-items:center;gap:10px;padding:12px 16px 8px;
   border-bottom:1px solid rgba(255,255,255,.07);}
@@ -1058,7 +1063,7 @@ button{touch-action:manipulation;}
         <div class="sandy-hdr-title">👨‍👩‍👦 Devvrat's Progress</div>
         <div class="sandy-hdr-sub">Parent Dashboard · Slimbo</div>
       </div>
-      <button class="btn-icon" onclick="logout()">← Uitloggen</button>
+      <button class="btn-logout" onclick="logout()">Uitloggen</button>
     </div>
   </div>
   <div id="sandyBody"></div>
@@ -3107,7 +3112,7 @@ function renderBram(tab){
     <div style="background:linear-gradient(135deg,var(--purple),var(--blue));padding:16px;text-align:center;border-radius:0 0 20px 20px;margin-bottom:4px">
       <div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:900;color:#fff">🔍 Bram — Leerkracht Review</div>
       <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:2px">De Arabesk · Devvrat Sharma</div>
-      <button class="btn-icon" onclick="logout()" style="margin-top:10px">← Uitloggen</button>
+      <button class="btn-logout" onclick="logout()" style="margin-top:10px">Uitloggen</button>
     </div>
     ${tabBar}
     <div style="padding:12px 16px 40px">${body}</div>`;
@@ -3172,7 +3177,7 @@ function _renderSandyWith(dp){
   const dayLabels=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
   let html=`<div class="sandy-header">
-    <button class="btn-icon" onclick="logout()">← Uitloggen</button>
+    <button class="btn-logout" onclick="logout()">Uitloggen</button>
     <h2 style="margin:0;font-size:1.1rem;flex:1">Sandy — Parent Dashboard 📊</h2>
   </div>
   <div class="sandy-body">
